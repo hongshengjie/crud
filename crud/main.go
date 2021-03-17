@@ -17,13 +17,13 @@ import (
 	"github.com/hongshengjie/crud/mytable"
 )
 
-//go:embed "templates/model.go.tmpl"
+//go:embed "templates/model.tmpl"
 var modelTmpl []byte
 
-//go:embed "templates/crud_mysql.go.tmpl"
+//go:embed "templates/builder.tmpl"
 var crudTmpl []byte
 
-//go:embed "templates/where.go.tmpl"
+//go:embed "templates/where.tmpl"
 var whereTmpl []byte
 
 var database string
@@ -81,7 +81,7 @@ func main() {
 	os.Mkdir(table.PackageName, os.ModePerm)
 	generateFile("model", string(modelTmpl), f, table)
 	generateFile("where", string(whereTmpl), f, table)
-	generateFile("crud", string(crudTmpl), f, table)
+	generateFile("builder", string(crudTmpl), f, table)
 
 }
 
