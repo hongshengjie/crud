@@ -1,9 +1,8 @@
 package user
 
 import (
-	"time"
-
 	"github.com/hongshengjie/crud/xsql"
+	"time"
 )
 
 type UserWhere func(s *xsql.Selector)

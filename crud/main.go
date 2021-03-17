@@ -36,7 +36,7 @@ func init() {
 	flag.StringVar(&database, "database", "mysql", "mysql or postgres")
 	flag.StringVar(&dsn, "dsn", "", "mysql connection url")
 	flag.StringVar(&table, "table", "", "table name")
-	flag.StringVar(&fields, "fields", "", "split by space, mark table‘s fields that can generate where condition method，default generate all index fields ; if fields = all generate all fields ;if fileds = id,xx,xxx,ctime generate id xx xxx citme fileds ")
+	flag.StringVar(&fields, "fields", "", "split by comma, mark table‘s fields that can generate where condition method，default generate all index fields ; if fields = all generate all fields ;if fileds = id,xx,xxx,ctime generate id xx xxx citme fileds ")
 }
 
 func main() {

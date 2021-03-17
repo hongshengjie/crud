@@ -191,6 +191,7 @@ func (s *SelectBuilder) OrderAsc(field string) *SelectBuilder {
 
 // One One
 func (s *SelectBuilder) One(ctx context.Context) (*User, error) {
+	s.builder.Limit(1)
 	results, err := s.All(ctx)
 	if err != nil {
 		return nil, err
@@ -223,7 +224,7 @@ func (s *SelectBuilder) Strings(ctx context.Context) ([]string, error) {
 
 // All FindRaw many record by raw sql
 func (s *SelectBuilder) All(ctx context.Context) ([]*User, error) {
-	if len(s.builder.Columns()) <= 0 {
+	if s.builder.SelectColumnsLen() <= 0 {
 		s.builder.Columns(Columns...)
 	}
 	sqlstr, args := s.builder.Query()

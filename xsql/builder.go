@@ -1181,6 +1181,10 @@ func (s *Selector) Columns(columns ...string) []string {
 	return names
 }
 
+func (s *Selector) SelectColumnsLen() int {
+	return len(s.columns)
+}
+
 // OnP sets or appends the given predicate for the `ON` clause of the statement.
 func (s *Selector) OnP(p *Predicate) *Selector {
 	if len(s.joins) > 0 {
