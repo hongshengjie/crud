@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hongshengjie/crud/snaker"
+	"github.com/hongshengjie/crud/crud/snaker"
 )
 
 // Table Table
@@ -20,7 +20,6 @@ type Table struct {
 	Indexes          []*Index  // indexes
 	GenerateWhereCol []*Column // GenerateWhereCol 生成where字段比较方法的列
 	ConditionsFields []string  // ConditionsFields  用户指定生成的条件方法
-	WhereImportTime  bool      // is need import time where.go
 	PrimaryKey       *Column   // priomary_key column
 	ImportTime       bool      // is need import time
 }
@@ -55,7 +54,6 @@ func NewTable(db *sql.DB, database, schema, table string, conditionsFields []str
 	}
 	if isAll {
 		mytable.GenerateWhereCol = mytable.Fields
-		mytable.WhereImportTime = mytable.ImportTime
 		return mytable
 	}
 
@@ -87,9 +85,6 @@ func NewTable(db *sql.DB, database, schema, table string, conditionsFields []str
 	}
 	generateCol := make([]*Column, 0, len(indexcols))
 	for _, v := range indexcols {
-		if v.GoColumnType == "time.Time" {
-			mytable.WhereImportTime = true
-		}
 		generateCol = append(generateCol, v)
 	}
 

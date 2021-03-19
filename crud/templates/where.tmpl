@@ -3,12 +3,105 @@
 package {{.PackageName}}
 
 import (
-	{{if .WhereImportTime}}"time"{{end}}
 	"github.com/hongshengjie/crud/xsql"
 )
 {{ $tableName := .GoTableName}}
 
 type {{$tableName}}Where func(s *xsql.Selector)
+
+
+
+{{- range .GenerateWhereCol }}
+		{{$c1:=gt .BigType 0}}
+		{{$c2:=eq .BigType  2}}
+		{{if $c1}}
+			// {{ .GoColumnName }}EQ  =
+			func {{ .GoColumnName }}EQ(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.EQ({{ .GoColumnName }}, arg))
+				})
+			}
+			// {{ .GoColumnName }}NEQ <>
+			func {{ .GoColumnName }}NEQ(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.NEQ({{ .GoColumnName }}, arg))
+				})
+			}
+			// {{ .GoColumnName }}LT <
+			func {{ .GoColumnName }}LT(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.LT({{ .GoColumnName }}, arg))
+				})
+			}
+			// {{ .GoColumnName }}LET <=
+			func {{ .GoColumnName }}LTE(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.LTE({{ .GoColumnName }}, arg))
+				})
+			}
+			// {{ .GoColumnName }}GT >
+			func {{ .GoColumnName }}GT(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.GT({{ .GoColumnName }}, arg))
+				})
+			}
+			// {{ .GoColumnName }}GTE >=
+			func {{ .GoColumnName }}GTE(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.GTE({{ .GoColumnName }}, arg))
+				})
+			}
+			// {{ .GoColumnName }}In in(...)
+			func {{ .GoColumnName }}In(args ...{{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					if len(args) == 0 {
+						s.Where(xsql.False())
+						return
+					}
+					v := make([]interface{}, len(args))
+					for i := range v {
+						v[i] = args[i]
+					}
+					s.Where(xsql.In( {{ .GoColumnName }}, v...))
+				})
+			}
+			// {{ .GoColumnName }}NotIn not in(...)
+			func {{ .GoColumnName }}NotIn(args ...{{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					if len(args) == 0 {
+						s.Where(xsql.False())
+						return
+					}
+					v := make([]interface{}, len(args))
+					for i := range v {
+						v[i] = args[i]
+					}
+					s.Where(xsql.NotIn({{ .GoColumnName }}, v...))
+				})
+			}
+		{{end}}
+		{{if $c2}}
+			// {{ .GoColumnName }}HasPrefix HasPrefix
+			func {{ .GoColumnName }}HasPrefix(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.HasPrefix( {{ .GoColumnName }} , arg))
+				})
+			}
+			// {{ .GoColumnName }}HasSuffix HasSuffix
+			func {{ .GoColumnName }}HasSuffix(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.HasSuffix( {{ .GoColumnName }} , arg))
+				})
+			}
+			// {{ .GoColumnName }}Contains Contains
+			func {{ .GoColumnName }}Contains(arg {{.GoConditionType}}) {{$tableName}}Where {
+				return {{$tableName}}Where(func(s *xsql.Selector) {
+					s.Where(xsql.Contains( {{ .GoColumnName }}, arg))
+				})
+			}
+		{{end}}
+{{- end}}
+
 
 
 // And groups predicates with the AND operator between them.
@@ -42,141 +135,6 @@ func Not(p {{$tableName}}Where) {{$tableName}}Where {
 		p(s.Not())
 	})
 }
-
-{{- range .GenerateWhereCol }}
-		{{$c1:=eq .BigType  1}}
-		{{$c2:=eq .BigType  3}}
-		{{if  or $c1 $c2  }}
-			// {{ .GoColumnName }}EQ  =
-			func {{ .GoColumnName }}EQ(arg {{.GoColumnType}}) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.EQ({{ .GoColumnName }}, arg))
-				})
-			}
-			// {{ .GoColumnName }}NEQ <>
-			func {{ .GoColumnName }}NEQ(arg {{.GoColumnType}}) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.NEQ({{ .GoColumnName }}, arg))
-				})
-			}
-			// {{ .GoColumnName }}LT <
-			func {{ .GoColumnName }}LT(arg {{.GoColumnType}}) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.LT({{ .GoColumnName }}, arg))
-				})
-			}
-			// {{ .GoColumnName }}LET <=
-			func {{ .GoColumnName }}LTE(arg {{.GoColumnType}}) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.LTE({{ .GoColumnName }}, arg))
-				})
-			}
-			// {{ .GoColumnName }}GT >
-			func {{ .GoColumnName }}GT(arg {{.GoColumnType}}) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.GT({{ .GoColumnName }}, arg))
-				})
-			}
-			// {{ .GoColumnName }}GTE >=
-			func {{ .GoColumnName }}GTE(arg {{.GoColumnType}}) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.GTE({{ .GoColumnName }}, arg))
-				})
-			}
-			// {{ .GoColumnName }}In in(...)
-			func {{ .GoColumnName }}In(args ...{{.GoColumnType}}) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					if len(args) == 0 {
-						s.Where(xsql.False())
-						return
-					}
-					v := make([]interface{}, len(args))
-					for i := range v {
-						v[i] = args[i]
-					}
-					s.Where(xsql.In( {{ .GoColumnName }}, v...))
-				})
-			}
-			// {{ .GoColumnName }}NotIn not in(...)
-			func {{ .GoColumnName }}NotIn(args ...{{.GoColumnType}}) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					if len(args) == 0 {
-						s.Where(xsql.False())
-						return
-					}
-					v := make([]interface{}, len(args))
-					for i := range v {
-						v[i] = args[i]
-					}
-					s.Where(xsql.NotIn( {{ .GoColumnName }}, v...))
-				})
-			}
-		{{else if  eq .BigType  2}}
-			// {{ .GoColumnName }}EQ = 
-			func {{ .GoColumnName }}EQ(v string) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.EQ( {{ .GoColumnName }} , v))
-				})
-			}
-			// {{ .GoColumnName }}EQ <>
-			func {{ .GoColumnName }}NEQ(v string) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.NEQ( {{ .GoColumnName }} , v))
-				})
-			}
-			// {{ .GoColumnName }}In in(...)
-			func {{ .GoColumnName }}In(vs ...string) {{$tableName}}Where {
-				v := make([]interface{}, len(vs))
-				for i := range v {
-					v[i] = vs[i]
-				}
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					// if not arguments were provided, append the FALSE constants,
-					// since we can't apply "IN ()". This will make this predicate falsy.
-					if len(v) == 0 {
-						s.Where(xsql.False())
-						return
-					}
-					s.Where(xsql.In( {{ .GoColumnName }} , v...))
-				})
-			}
-			// {{.GoColumnName}}NotIn not int(...)
-			func {{ .GoColumnName }}NotIn(vs ...string) {{$tableName}}Where {
-				v := make([]interface{}, len(vs))
-				for i := range v {
-					v[i] = vs[i]
-				}
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					// if not arguments were provided, append the FALSE constants,
-					// since we can't apply "IN ()". This will make this predicate falsy.
-					if len(v) == 0 {
-						s.Where(xsql.False())
-						return
-					}
-					s.Where(xsql.NotIn( {{ .GoColumnName }} , v...))
-				})
-			}
-			// {{ .GoColumnName }}HasPrefix HasPrefix
-			func {{ .GoColumnName }}HasPrefix(v string) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.HasPrefix( {{ .GoColumnName }} , v))
-				})
-			}
-			// {{ .GoColumnName }}HasSuffix HasSuffix
-			func {{ .GoColumnName }}HasSuffix(v string) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.HasSuffix( {{ .GoColumnName }} , v))
-				})
-			}
-			// {{ .GoColumnName }}Contains Contains
-			func {{ .GoColumnName }}Contains(v string) {{$tableName}}Where {
-				return {{$tableName}}Where(func(s *xsql.Selector) {
-					s.Where(xsql.Contains( {{ .GoColumnName }}, v))
-				})
-			}
-		{{end}}
-{{- end}}
-
 
 
 

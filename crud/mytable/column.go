@@ -3,7 +3,7 @@ package mytable
 import (
 	"database/sql"
 
-	"github.com/hongshengjie/crud/snaker"
+	"github.com/hongshengjie/crud/crud/snaker"
 )
 
 // Column Column
@@ -19,7 +19,8 @@ type Column struct {
 	IsDefaultCurrentTimestamp bool   // is_default_currenttimestamp
 	GoColumnName              string // go field name
 	GoColumnType              string // go field type
-	BigType                   int    // 0 表示不生成where 1 表示数字 2表示字符串
+	BigType                   int    // 0 表示不生成where 1 表示比较类型 2表示比较类型+字符串 3表示比较类型，修改传入参数
+	GoConditionType           string // 生成where 的类型参数
 }
 
 // MyTableColumns MyTableColumns
@@ -55,6 +56,10 @@ func MyTableColumns(db *sql.DB, schema string, table string) ([]*Column, error) 
 		}
 		c.GoColumnName = snaker.SnakeToCamelIdentifier(c.ColumnName)
 		c.GoColumnType, c.BigType = MysqlToGoFieldType(c.DataType, c.ColumnType)
+		c.GoConditionType = c.GoColumnType
+		if c.BigType == bigtypeCompareTime {
+			c.GoConditionType = "string"
+		}
 		res = append(res, &c)
 	}
 

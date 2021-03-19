@@ -13,6 +13,8 @@ type User struct {
 	Age   int32     `json:"age"`   // 年龄
 	Ctime time.Time `json:"ctime"` // 创建时间
 	Mtime time.Time `json:"mtime"` //
+	Pic   []byte    `json:"pic"`   //
+	BitT  []uint8   `json:"bit_t"` //
 }
 
 const (
@@ -28,6 +30,10 @@ const (
 	Ctime = "ctime"
 	//Mtime
 	Mtime = "mtime"
+	//Pic
+	Pic = "pic"
+	//BitT
+	BitT = "bit_t"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -37,6 +43,8 @@ var Columns = []string{
 	Age,
 	Ctime,
 	Mtime,
+	Pic,
+	BitT,
 }
 
 var dialect = "mysql"

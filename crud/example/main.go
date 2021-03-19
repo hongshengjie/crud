@@ -6,7 +6,7 @@ import (
 
 	"database/sql"
 
-	"github.com/hongshengjie/crud/example/user"
+	"github.com/hongshengjie/crud/crud/example/user"
 	"github.com/hongshengjie/crud/xsql"
 
 	_ "github.com/go-sql-driver/mysql"

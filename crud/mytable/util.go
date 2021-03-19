@@ -4,6 +4,12 @@ import (
 	"strings"
 )
 
+const (
+	bigtypeCompare       = 1
+	bigtypeCompareString = 2
+	bigtypeCompareTime   = 3
+)
+
 // MysqlToGoFieldType MysqlToGoFieldType
 func MysqlToGoFieldType(dt, ct string) (string, int) {
 	var unsigned bool
@@ -19,45 +25,46 @@ func MysqlToGoFieldType(dt, ct string) (string, int) {
 		typ = "bool"
 	case "char", "varchar", "tinytext", "text", "mediumtext", "longtext", "json":
 		typ = "string"
-		gtp = 2
+		gtp = bigtypeCompareString
 	case "tinyint":
 		typ = "int8"
 		if unsigned {
 			typ = "uint8"
 		}
-		gtp = 1
+		gtp = bigtypeCompare
 	case "smallint":
 		typ = "int16"
 		if unsigned {
 			typ = "uint16"
 		}
-		gtp = 1
+		gtp = bigtypeCompare
 	case "mediumint", "int", "integer":
 		typ = "int32"
 		if unsigned {
 			typ = "uint32"
 		}
-		gtp = 1
+		gtp = bigtypeCompare
 	case "bigint":
 		typ = "int64"
 		if unsigned {
 			typ = "uint64"
 		}
-		gtp = 1
+		gtp = bigtypeCompare
 	case "float":
 		typ = "float32"
-		gtp = 1
+		gtp = bigtypeCompare
 	case "decimal", "double":
 		typ = "float64"
-		gtp = 1
+		gtp = bigtypeCompare
 	case "binary", "varbinary", "tinyblob", "blob", "mediumblob", "longblob":
 		typ = "[]byte"
+		gtp = bigtypeCompare
 	case "timestamp", "datetime", "date":
 		typ = "time.Time"
-		gtp = 3
+		gtp = bigtypeCompareTime
 	case "time", "year", "enum", "set":
 		typ = "string"
-		gtp = 2
+		gtp = bigtypeCompare
 	default:
 		typ = "UNKNOWN"
 	}
@@ -81,7 +88,7 @@ func SQLTool(t *Table, omit bool, flag string) string {
 		case "gofield":
 			ns = append(ns, "&a."+v.GoColumnName)
 		case "goinfield":
-			ns = append(ns, "&in.a."+v.GoColumnName)
+			ns = append(ns, "in.a."+v.GoColumnName)
 		case "goinfieldcol":
 			ns = append(ns, v.GoColumnName)
 		case "set":

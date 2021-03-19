@@ -42,8 +42,8 @@ func (in *InsertBuilder) Save(ctx context.Context) error {
 	if in.a == nil {
 		return errors.New("please set a User")
 	}
-	ins, args := in.builder.Columns(Name, Age).
-		Values(&in.a.Name, &in.a.Age).
+	ins, args := in.builder.Columns(Name, Age, Pic, BitT).
+		Values(in.a.Name, in.a.Age, in.a.Pic, in.a.BitT).
 		Query()
 	result, err := in.dt.ExecContext(ctx, ins, args...)
 	if err != nil {
@@ -312,6 +312,24 @@ func (u *UpdateBuilder) SetCtime(arg time.Time) *UpdateBuilder {
 // SetMtime  set mtime
 func (u *UpdateBuilder) SetMtime(arg time.Time) *UpdateBuilder {
 	u.builder.Set(Mtime, arg)
+	return u
+}
+
+// SetPic  set pic
+func (u *UpdateBuilder) SetPic(arg []byte) *UpdateBuilder {
+	u.builder.Set(Pic, arg)
+	return u
+}
+
+// AddPic  add  pic set x = x + arg
+func (u *UpdateBuilder) AddPic(arg interface{}) *UpdateBuilder {
+	u.builder.Add(Pic, arg)
+	return u
+}
+
+// SetBitT  set bit_t
+func (u *UpdateBuilder) SetBitT(arg []uint8) *UpdateBuilder {
+	u.builder.Set(BitT, arg)
 	return u
 }
 
