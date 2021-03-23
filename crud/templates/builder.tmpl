@@ -25,7 +25,7 @@ func Create(dt xsql.DBTX) *InsertBuilder {
 	}
 }
 
-// Table  涉及到分表查询的时候指定表名，通常情况下不需要调用此方法
+// Table   In the case of sub tables, you need this method, otherwise never use it
 func (in *InsertBuilder) Table(name string) *InsertBuilder {
 	in.builder.Table(name)
 	return in
@@ -75,7 +75,7 @@ func Delete(dt xsql.DBTX) *DeleteBuilder {
 }
 
 
-// Table  涉及到分表查询的时候指定表名，通常情况下不需要调用此方法
+// Table   In the case of sub tables, you need this method, otherwise never use it
 func (d *DeleteBuilder) Table(name string) *DeleteBuilder {
 	d.builder.Table(name)
 	return d
@@ -142,7 +142,7 @@ func (s *SelectBuilder) Count(columns ...string) *SelectBuilder {
 }
 
 
-// Table  涉及到分表查询的时候指定表名，通常情况下不需要调用此方法
+// Table   In the case of sub tables, you need this method, otherwise never use it
 func (s *SelectBuilder) Table(name string) *SelectBuilder {
 	s.builder.From(xsql.Table(name))
 	return s
@@ -213,22 +213,22 @@ func (s *SelectBuilder) Int64(ctx context.Context) (int64, error) {
 	return xsql.Int64(ctx, s.builder, s.dt)
 }
 
-// Int64 count or select only one int field
+// Int64s return int64 slice
 func (s *SelectBuilder) Int64s(ctx context.Context) ([]int64, error) {
 	return xsql.Int64s(ctx, s.builder, s.dt)
 }
 
-// Query FindRaw many record by raw sql
+// String  String
 func (s *SelectBuilder) String(ctx context.Context) (string, error) {
 	return xsql.String(ctx, s.builder, s.dt)
 }
 
-// Query FindRaw many record by raw sql
+// Strings return string slice
 func (s *SelectBuilder) Strings(ctx context.Context) ([]string, error) {
 	return xsql.Strings(ctx, s.builder, s.dt)
 }
 
-// All FindRaw many record by raw sql
+// All  return all results
 func (s *SelectBuilder)All(ctx context.Context) ([]*{{$tableName}}, error) {
 	if s.builder.SelectColumnsLen() <= 0 {
 		s.builder.Columns(Columns...)
@@ -263,8 +263,7 @@ func Update(dt xsql.DBTX) *UpdateBuilder {
 
 
 
-// Table  for custom demand  change table name  for example   sub table system
-// In the case of no sub-table you do not need this method
+// Table  In the case of sub tables, you need this method, otherwise never use it
 func (u *UpdateBuilder) Table(name string) *UpdateBuilder {
 	u.builder.Table(name)
 	return u
