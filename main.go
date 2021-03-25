@@ -14,7 +14,7 @@ import (
 	_ "embed"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/hongshengjie/crud/crud/mytable"
+	"github.com/hongshengjie/crud/mytable"
 )
 
 //go:embed "templates/model.tmpl"

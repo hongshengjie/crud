@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hongshengjie/crud/crud/snaker"
+	"github.com/hongshengjie/crud/snaker"
 )
 
 // Table Table

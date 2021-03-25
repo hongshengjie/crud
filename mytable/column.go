@@ -3,7 +3,7 @@ package mytable
 import (
 	"database/sql"
 
-	"github.com/hongshengjie/crud/crud/snaker"
+	"github.com/hongshengjie/crud/snaker"
 )
 
 // Column Column
