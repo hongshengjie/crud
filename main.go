@@ -67,6 +67,7 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer db.Close()
 	var isAll bool
 
 	if strings.TrimSpace(fields) == "all" {
