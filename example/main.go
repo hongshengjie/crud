@@ -4,21 +4,19 @@ import (
 	"context"
 	"fmt"
 
-	"database/sql"
-
 	"github.com/hongshengjie/crud/example/user"
 	"github.com/hongshengjie/xsql"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB
+var db *xsql.DB
 var dsn = "root:root@tcp(127.0.0.1:3306)/example?parseTime=true"
 var ctx = context.Background()
 
 func InitDB() {
 	var err error
-	db, err = sql.Open("mysql", dsn)
+	db, err = xsql.Open("mysql", dsn)
 	if err != nil {
 		panic(err)
 	}
