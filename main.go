@@ -30,13 +30,13 @@ var database string
 var dsn string
 var table string
 
-var fields string
+//var fields string
 
 func init() {
 	flag.StringVar(&database, "database", "mysql", "mysql or postgres")
 	flag.StringVar(&dsn, "dsn", "", "mysql connection url")
 	flag.StringVar(&table, "table", "", "table name")
-	flag.StringVar(&fields, "fields", "", "split by comma, mark table‘s fields that can generate where condition method，default generate all index fields ; if fields = all generate all fields ;if fileds = id,xx,xxx,ctime generate id xx xxx citme fileds ")
+	//flag.StringVar(&fields, "fields", "", "split by comma, mark table‘s fields that can generate where condition method，default generate all index fields ; if fields = all generate all fields ;if fileds = id,xx,xxx,ctime generate id xx xxx citme fileds ")
 }
 
 func main() {
@@ -68,15 +68,16 @@ func main() {
 		log.Fatalln(err)
 	}
 	defer db.Close()
-	var isAll bool
+	// var isAll bool
 
-	if strings.TrimSpace(fields) == "all" {
-		isAll = true
-	}
-	conditionFields := strings.Split(fields, ",")
-	table := mytable.NewTable(db, database, schema, table, conditionFields, isAll)
+	// if strings.TrimSpace(fields) == "all" {
+	// 	isAll = true
+	// }
+	// conditionFields := strings.Split(fields, ",")
+	table := mytable.NewTable(db, database, schema, table, []string{}, true)
 	f := template.FuncMap{
-		"sqltool": mytable.SQLTool,
+		"sqltool":  mytable.SQLTool,
+		"isnumber": mytable.IsNumber,
 	}
 	//创建目录
 	os.Mkdir(table.PackageName, os.ModePerm)

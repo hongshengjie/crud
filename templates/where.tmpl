@@ -14,45 +14,51 @@ type {{$tableName}}Where func(s *xsql.Selector)
 {{- range .GenerateWhereCol }}
 		{{$c1:=gt .BigType 0}}
 		{{$c2:=eq .BigType  2}}
+		{{$c4:=eq .BigType 4}}
 		{{if $c1}}
+			{{$typeName := .GoConditionType}}
+			{{if $c4}}
+				{{$typeName = "int64"}}
+			{{end}}
+
 			// {{ .GoColumnName }}EQ  =
-			func {{ .GoColumnName }}EQ(arg {{.GoConditionType}}) {{$tableName}}Where {
+			func {{ .GoColumnName }}EQ(arg {{$typeName}}) {{$tableName}}Where {
 				return {{$tableName}}Where(func(s *xsql.Selector) {
 					s.Where(xsql.EQ({{ .GoColumnName }}, arg))
 				})
 			}
 			// {{ .GoColumnName }}NEQ <>
-			func {{ .GoColumnName }}NEQ(arg {{.GoConditionType}}) {{$tableName}}Where {
+			func {{ .GoColumnName }}NEQ(arg {{$typeName}}) {{$tableName}}Where {
 				return {{$tableName}}Where(func(s *xsql.Selector) {
 					s.Where(xsql.NEQ({{ .GoColumnName }}, arg))
 				})
 			}
 			// {{ .GoColumnName }}LT <
-			func {{ .GoColumnName }}LT(arg {{.GoConditionType}}) {{$tableName}}Where {
+			func {{ .GoColumnName }}LT(arg {{$typeName}}) {{$tableName}}Where {
 				return {{$tableName}}Where(func(s *xsql.Selector) {
 					s.Where(xsql.LT({{ .GoColumnName }}, arg))
 				})
 			}
 			// {{ .GoColumnName }}LET <=
-			func {{ .GoColumnName }}LTE(arg {{.GoConditionType}}) {{$tableName}}Where {
+			func {{ .GoColumnName }}LTE(arg {{$typeName}}) {{$tableName}}Where {
 				return {{$tableName}}Where(func(s *xsql.Selector) {
 					s.Where(xsql.LTE({{ .GoColumnName }}, arg))
 				})
 			}
 			// {{ .GoColumnName }}GT >
-			func {{ .GoColumnName }}GT(arg {{.GoConditionType}}) {{$tableName}}Where {
+			func {{ .GoColumnName }}GT(arg {{$typeName}}) {{$tableName}}Where {
 				return {{$tableName}}Where(func(s *xsql.Selector) {
 					s.Where(xsql.GT({{ .GoColumnName }}, arg))
 				})
 			}
 			// {{ .GoColumnName }}GTE >=
-			func {{ .GoColumnName }}GTE(arg {{.GoConditionType}}) {{$tableName}}Where {
+			func {{ .GoColumnName }}GTE(arg {{$typeName}}) {{$tableName}}Where {
 				return {{$tableName}}Where(func(s *xsql.Selector) {
 					s.Where(xsql.GTE({{ .GoColumnName }}, arg))
 				})
 			}
 			// {{ .GoColumnName }}In in(...)
-			func {{ .GoColumnName }}In(args ...{{.GoConditionType}}) {{$tableName}}Where {
+			func {{ .GoColumnName }}In(args ...{{$typeName}}) {{$tableName}}Where {
 				return {{$tableName}}Where(func(s *xsql.Selector) {
 					if len(args) == 0 {
 						s.Where(xsql.False())
@@ -66,7 +72,7 @@ type {{$tableName}}Where func(s *xsql.Selector)
 				})
 			}
 			// {{ .GoColumnName }}NotIn not in(...)
-			func {{ .GoColumnName }}NotIn(args ...{{.GoConditionType}}) {{$tableName}}Where {
+			func {{ .GoColumnName }}NotIn(args ...{{$typeName}}) {{$tableName}}Where {
 				return {{$tableName}}Where(func(s *xsql.Selector) {
 					if len(args) == 0 {
 						s.Where(xsql.False())

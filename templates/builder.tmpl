@@ -15,7 +15,7 @@ import (
 type InsertBuilder struct {
 	dt      xsql.Executor
 	builder *xsql.InsertBuilder
-	a    *{{$tableName}}
+	a    []*{{$tableName}}
 }
 
 // Create Create
@@ -33,32 +33,42 @@ func (in *InsertBuilder) Table(name string) *InsertBuilder {
 }
 
 // Set{{$tableName}} Set{{$tableName}}
-func (in *InsertBuilder) Set{{$tableName}}(a *{{$tableName}}) *InsertBuilder {
-	in.a = a
+func (in *InsertBuilder) Set{{$tableName}}(a ...*{{$tableName}}) *InsertBuilder {
+	in.a = append(in.a,a...)
 	return in
 }
 
 // Save Save
-func (in *InsertBuilder) Save(ctx context.Context) error {
-	if in.a == nil {
-		return errors.New("please set a {{$tableName}}")
+func (in *InsertBuilder) Save(ctx context.Context) (int64,error) {
+	if len(in.a) == 0 {
+		return 0, errors.New("please set a {{$tableName}}")
 	}
-	ins, args := in.builder.Columns({{ sqltool . true "goinfieldcol"}}).
-	Values({{ sqltool . true "goinfield"}}).
-	Query()
+	in.builder.Columns({{ sqltool . true "goinfieldcol"}})
+
+	for _,a:=range in.a{
+		if a == nil{
+			return  0,errors.New("can not insert a nil {{$tableName}}")
+		}
+		in.builder.Values({{ sqltool . true "goinfieldcolbulk"}})
+	}
+	
+	ins,args:=in.builder.Query()
 	result, err := in.dt.ExecContext(ctx,ins, args...)
 	if err != nil {
-		return err
+		return 0, err
 	}
  	{{if .PrimaryKey.IsAutoIncrment}}
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
+	if len(in.a)==0{
+		id, err := result.LastInsertId()
+		if err != nil {
+			return 0,err
+		}
+		in.a[0].{{.PrimaryKey.GoColumnName}} = {{.PrimaryKey.GoColumnType}}(id)
 	}
-	in.a.{{.PrimaryKey.GoColumnName}} = {{.PrimaryKey.GoColumnType}}(id)
+	
     {{end}}
 
-	return nil
+	return result.RowsAffected()
 }
 
 // DeleteBuilder DeleteBuilder
@@ -295,12 +305,13 @@ func (u *UpdateBuilder) Where(p ...{{$tableName}}Where) *UpdateBuilder {
 	{{$c3:=eq .BigType 1}}
 	{{$c4:=not .IsPrimaryKey}}
 	{{if and $c3 $c4}}
-	
-	// Add{{.GoColumnName}}  add  {{.ColumnName}} set x = x + arg 
-	func (u *UpdateBuilder) Add{{ .GoColumnName }} (arg  interface{}) *UpdateBuilder {
-		u.builder.Add({{ .GoColumnName }} , arg)
-		return u
-	}
+		{{if isnumber .GoColumnType}}
+			// Add{{.GoColumnName}}  add  {{.ColumnName}} set x = x + arg 
+			func (u *UpdateBuilder) Add{{ .GoColumnName }} (arg  interface{}) *UpdateBuilder {
+				u.builder.Add({{ .GoColumnName }} , arg)
+				return u
+			}
+		{{end}}
 	{{end}}
 
 {{ end }}

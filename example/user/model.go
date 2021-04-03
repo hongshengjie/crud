@@ -8,13 +8,12 @@ import (
 
 // User represents a row from 'user'.
 type User struct {
-	ID    uint32    `json:"id"`    // id字段
-	Name  string    `json:"name"`  // 名称
-	Age   int32     `json:"age"`   // 年龄
-	Ctime time.Time `json:"ctime"` // 创建时间
-	Mtime time.Time `json:"mtime"` //
-	Pic   []byte    `json:"pic"`   //
-	BitT  []uint8   `json:"bit_t"` //
+	ID      int64     `json:"id"`      // id字段
+	Name    string    `json:"name"`    // 名称
+	Age     int64     `json:"age"`     // 年龄
+	Ctime   time.Time `json:"ctime"`   // 创建时间
+	Abit    []byte    `json:"abit"`    //
+	Abinary []byte    `json:"abinary"` //
 }
 
 const (
@@ -28,12 +27,10 @@ const (
 	Age = "age"
 	//Ctime 创建时间
 	Ctime = "ctime"
-	//Mtime
-	Mtime = "mtime"
-	//Pic
-	Pic = "pic"
-	//BitT
-	BitT = "bit_t"
+	//Abit
+	Abit = "abit"
+	//Abinary
+	Abinary = "abinary"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -42,9 +39,8 @@ var Columns = []string{
 	Name,
 	Age,
 	Ctime,
-	Mtime,
-	Pic,
-	BitT,
+	Abit,
+	Abinary,
 }
 
 var dialect = "mysql"

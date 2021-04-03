@@ -173,50 +173,50 @@ func NameContains(arg string) UserWhere {
 	})
 }
 
-// MtimeEQ  =
-func MtimeEQ(arg string) UserWhere {
+// AgeEQ  =
+func AgeEQ(arg int32) UserWhere {
 	return UserWhere(func(s *xsql.Selector) {
-		s.Where(xsql.EQ(Mtime, arg))
+		s.Where(xsql.EQ(Age, arg))
 	})
 }
 
-// MtimeNEQ <>
-func MtimeNEQ(arg string) UserWhere {
+// AgeNEQ <>
+func AgeNEQ(arg int32) UserWhere {
 	return UserWhere(func(s *xsql.Selector) {
-		s.Where(xsql.NEQ(Mtime, arg))
+		s.Where(xsql.NEQ(Age, arg))
 	})
 }
 
-// MtimeLT <
-func MtimeLT(arg string) UserWhere {
+// AgeLT <
+func AgeLT(arg int32) UserWhere {
 	return UserWhere(func(s *xsql.Selector) {
-		s.Where(xsql.LT(Mtime, arg))
+		s.Where(xsql.LT(Age, arg))
 	})
 }
 
-// MtimeLET <=
-func MtimeLTE(arg string) UserWhere {
+// AgeLET <=
+func AgeLTE(arg int32) UserWhere {
 	return UserWhere(func(s *xsql.Selector) {
-		s.Where(xsql.LTE(Mtime, arg))
+		s.Where(xsql.LTE(Age, arg))
 	})
 }
 
-// MtimeGT >
-func MtimeGT(arg string) UserWhere {
+// AgeGT >
+func AgeGT(arg int32) UserWhere {
 	return UserWhere(func(s *xsql.Selector) {
-		s.Where(xsql.GT(Mtime, arg))
+		s.Where(xsql.GT(Age, arg))
 	})
 }
 
-// MtimeGTE >=
-func MtimeGTE(arg string) UserWhere {
+// AgeGTE >=
+func AgeGTE(arg int32) UserWhere {
 	return UserWhere(func(s *xsql.Selector) {
-		s.Where(xsql.GTE(Mtime, arg))
+		s.Where(xsql.GTE(Age, arg))
 	})
 }
 
-// MtimeIn in(...)
-func MtimeIn(args ...string) UserWhere {
+// AgeIn in(...)
+func AgeIn(args ...int32) UserWhere {
 	return UserWhere(func(s *xsql.Selector) {
 		if len(args) == 0 {
 			s.Where(xsql.False())
@@ -226,12 +226,12 @@ func MtimeIn(args ...string) UserWhere {
 		for i := range v {
 			v[i] = args[i]
 		}
-		s.Where(xsql.In(Mtime, v...))
+		s.Where(xsql.In(Age, v...))
 	})
 }
 
-// MtimeNotIn not in(...)
-func MtimeNotIn(args ...string) UserWhere {
+// AgeNotIn not in(...)
+func AgeNotIn(args ...int32) UserWhere {
 	return UserWhere(func(s *xsql.Selector) {
 		if len(args) == 0 {
 			s.Where(xsql.False())
@@ -241,7 +241,223 @@ func MtimeNotIn(args ...string) UserWhere {
 		for i := range v {
 			v[i] = args[i]
 		}
-		s.Where(xsql.NotIn(Mtime, v...))
+		s.Where(xsql.NotIn(Age, v...))
+	})
+}
+
+// CtimeEQ  =
+func CtimeEQ(arg string) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.EQ(Ctime, arg))
+	})
+}
+
+// CtimeNEQ <>
+func CtimeNEQ(arg string) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.NEQ(Ctime, arg))
+	})
+}
+
+// CtimeLT <
+func CtimeLT(arg string) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.LT(Ctime, arg))
+	})
+}
+
+// CtimeLET <=
+func CtimeLTE(arg string) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.LTE(Ctime, arg))
+	})
+}
+
+// CtimeGT >
+func CtimeGT(arg string) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.GT(Ctime, arg))
+	})
+}
+
+// CtimeGTE >=
+func CtimeGTE(arg string) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.GTE(Ctime, arg))
+	})
+}
+
+// CtimeIn in(...)
+func CtimeIn(args ...string) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		if len(args) == 0 {
+			s.Where(xsql.False())
+			return
+		}
+		v := make([]interface{}, len(args))
+		for i := range v {
+			v[i] = args[i]
+		}
+		s.Where(xsql.In(Ctime, v...))
+	})
+}
+
+// CtimeNotIn not in(...)
+func CtimeNotIn(args ...string) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		if len(args) == 0 {
+			s.Where(xsql.False())
+			return
+		}
+		v := make([]interface{}, len(args))
+		for i := range v {
+			v[i] = args[i]
+		}
+		s.Where(xsql.NotIn(Ctime, v...))
+	})
+}
+
+// AbitEQ  =
+func AbitEQ(arg int64) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.EQ(Abit, arg))
+	})
+}
+
+// AbitNEQ <>
+func AbitNEQ(arg int64) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.NEQ(Abit, arg))
+	})
+}
+
+// AbitLT <
+func AbitLT(arg int64) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.LT(Abit, arg))
+	})
+}
+
+// AbitLET <=
+func AbitLTE(arg int64) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.LTE(Abit, arg))
+	})
+}
+
+// AbitGT >
+func AbitGT(arg int64) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.GT(Abit, arg))
+	})
+}
+
+// AbitGTE >=
+func AbitGTE(arg int64) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.GTE(Abit, arg))
+	})
+}
+
+// AbitIn in(...)
+func AbitIn(args ...int64) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		if len(args) == 0 {
+			s.Where(xsql.False())
+			return
+		}
+		v := make([]interface{}, len(args))
+		for i := range v {
+			v[i] = args[i]
+		}
+		s.Where(xsql.In(Abit, v...))
+	})
+}
+
+// AbitNotIn not in(...)
+func AbitNotIn(args ...int64) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		if len(args) == 0 {
+			s.Where(xsql.False())
+			return
+		}
+		v := make([]interface{}, len(args))
+		for i := range v {
+			v[i] = args[i]
+		}
+		s.Where(xsql.NotIn(Abit, v...))
+	})
+}
+
+// AbinaryEQ  =
+func AbinaryEQ(arg []byte) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.EQ(Abinary, arg))
+	})
+}
+
+// AbinaryNEQ <>
+func AbinaryNEQ(arg []byte) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.NEQ(Abinary, arg))
+	})
+}
+
+// AbinaryLT <
+func AbinaryLT(arg []byte) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.LT(Abinary, arg))
+	})
+}
+
+// AbinaryLET <=
+func AbinaryLTE(arg []byte) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.LTE(Abinary, arg))
+	})
+}
+
+// AbinaryGT >
+func AbinaryGT(arg []byte) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.GT(Abinary, arg))
+	})
+}
+
+// AbinaryGTE >=
+func AbinaryGTE(arg []byte) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		s.Where(xsql.GTE(Abinary, arg))
+	})
+}
+
+// AbinaryIn in(...)
+func AbinaryIn(args ...[]byte) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		if len(args) == 0 {
+			s.Where(xsql.False())
+			return
+		}
+		v := make([]interface{}, len(args))
+		for i := range v {
+			v[i] = args[i]
+		}
+		s.Where(xsql.In(Abinary, v...))
+	})
+}
+
+// AbinaryNotIn not in(...)
+func AbinaryNotIn(args ...[]byte) UserWhere {
+	return UserWhere(func(s *xsql.Selector) {
+		if len(args) == 0 {
+			s.Where(xsql.False())
+			return
+		}
+		v := make([]interface{}, len(args))
+		for i := range v {
+			v[i] = args[i]
+		}
+		s.Where(xsql.NotIn(Abinary, v...))
 	})
 }
 

@@ -84,6 +84,9 @@ func MyIndexColumns(db *sql.DB, schema string, table string, index string) ([]st
 
 		res = append(res, ic)
 	}
+	if q.Err() != nil {
+		return nil, q.Err()
+	}
 
 	return res, nil
 }

@@ -8,6 +8,7 @@ const (
 	bigtypeCompare       = 1
 	bigtypeCompareString = 2
 	bigtypeCompareTime   = 3
+	bigtypeCompareBit    = 4
 )
 
 // MysqlToGoFieldType MysqlToGoFieldType
@@ -20,12 +21,15 @@ func MysqlToGoFieldType(dt, ct string) (string, int) {
 	var gtp int
 	switch dt {
 	case "bit":
-		typ = "[]uint8"
+		typ = "[]byte"
+		gtp = bigtypeCompareBit
 	case "bool", "boolean":
 		typ = "bool"
-	case "char", "varchar", "tinytext", "text", "mediumtext", "longtext", "json":
+	case "char", "varchar":
 		typ = "string"
 		gtp = bigtypeCompareString
+	case "tinytext", "text", "mediumtext", "longtext", "json":
+		typ = "string"
 	case "tinyint":
 		typ = "int8"
 		if unsigned {
@@ -56,9 +60,11 @@ func MysqlToGoFieldType(dt, ct string) (string, int) {
 	case "decimal", "double":
 		typ = "float64"
 		gtp = bigtypeCompare
-	case "binary", "varbinary", "tinyblob", "blob", "mediumblob", "longblob":
+	case "binary", "varbinary":
 		typ = "[]byte"
 		gtp = bigtypeCompare
+	case "tinyblob", "blob", "mediumblob", "longblob":
+		typ = "[]byte"
 	case "timestamp", "datetime", "date":
 		typ = "time.Time"
 		gtp = bigtypeCompareTime
@@ -91,6 +97,8 @@ func SQLTool(t *Table, omit bool, flag string) string {
 			ns = append(ns, "in.a."+v.GoColumnName)
 		case "goinfieldcol":
 			ns = append(ns, v.GoColumnName)
+		case "goinfieldcolbulk":
+			ns = append(ns, "a."+v.GoColumnName)
 		case "set":
 			ns = append(ns, v.ColumnName+" = ? ")
 		default:
@@ -101,47 +109,12 @@ func SQLTool(t *Table, omit bool, flag string) string {
 	return strings.Join(ns, ",")
 }
 
-// SQLUpdate sql update
-func SQLUpdate(t *Table, omit bool) string {
-	var ns []string
-	var prime *Column
-	for _, v := range t.Fields {
-		if omit {
-			if v.IsDefaultCurrentTimestamp {
-				continue
-			}
-		}
-		if v.IsPrimaryKey {
-			prime = v
-			continue
-		}
-		ns = append(ns, "a."+v.GoColumnName)
+func IsNumber(arg string) bool {
+	switch arg {
+	case "int8", "int16", "int", "int32", "int64",
+		"uint", "uint8", "uint16", "uint32", "uint64",
+		"float32", "float64":
+		return true
 	}
-	ns = append(ns, "a."+prime.GoColumnName)
-
-	return strings.Join(ns, ",")
-}
-
-// SQLIndexParamList SQLIndexParamList
-func SQLIndexParamList(index *Index, needType bool) string {
-	var ns []string
-	for _, v := range index.IndexColumns {
-		s := v.ColumnName
-		if needType {
-			s = s + " " + v.GoColumnType
-		}
-		ns = append(ns, s)
-	}
-	return strings.Join(ns, ",")
-}
-
-// SQLIndexQuery SQLIndexQuery
-func SQLIndexQuery(index *Index) string {
-	var ns []string
-	for _, v := range index.IndexColumns {
-		s := v.ColumnName + " = ? "
-
-		ns = append(ns, s)
-	}
-	return strings.Join(ns, "AND ")
+	return false
 }

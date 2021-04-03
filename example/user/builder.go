@@ -15,7 +15,7 @@ import (
 type InsertBuilder struct {
 	dt      xsql.Executor
 	builder *xsql.InsertBuilder
-	a       *User
+	a       []*User
 }
 
 // Create Create
@@ -33,31 +33,40 @@ func (in *InsertBuilder) Table(name string) *InsertBuilder {
 }
 
 // SetUser SetUser
-func (in *InsertBuilder) SetUser(a *User) *InsertBuilder {
-	in.a = a
+func (in *InsertBuilder) SetUser(a ...*User) *InsertBuilder {
+	in.a = append(in.a, a...)
 	return in
 }
 
 // Save Save
-func (in *InsertBuilder) Save(ctx context.Context) error {
-	if in.a == nil {
-		return errors.New("please set a User")
+func (in *InsertBuilder) Save(ctx context.Context) (int64, error) {
+	if len(in.a) == 0 {
+		return 0, errors.New("please set a User")
 	}
-	ins, args := in.builder.Columns(Name, Age, Pic, BitT).
-		Values(in.a.Name, in.a.Age, in.a.Pic, in.a.BitT).
-		Query()
+	in.builder.Columns(Name, Age, Abit, Abinary)
+
+	for _, a := range in.a {
+		if a == nil {
+			return 0, errors.New("can not insert a nil User")
+		}
+		in.builder.Values(a.Name, a.Age, a.Abit, a.Abinary)
+	}
+
+	ins, args := in.builder.Query()
 	result, err := in.dt.ExecContext(ctx, ins, args...)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return err
+	if len(in.a) == 0 {
+		id, err := result.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+		in.a[0].ID = int64(id)
 	}
-	in.a.ID = uint32(id)
 
-	return nil
+	return result.RowsAffected()
 }
 
 // DeleteBuilder DeleteBuilder
@@ -97,7 +106,7 @@ func (d *DeleteBuilder) WhereP(p *xsql.Predicate) *DeleteBuilder {
 }
 
 // ByID  delete by primary key
-func (d *DeleteBuilder) ByID(id uint32) *DeleteBuilder {
+func (d *DeleteBuilder) ByID(id int64) *DeleteBuilder {
 	d.builder = d.builder.Where(xsql.EQ(ID, id))
 	return d
 }
@@ -163,7 +172,7 @@ func (s *SelectBuilder) Where(p ...UserWhere) *SelectBuilder {
 }
 
 // ByID select by primary key
-func (s *SelectBuilder) ByID(id uint32) *SelectBuilder {
+func (s *SelectBuilder) ByID(id int64) *SelectBuilder {
 	s.builder.Where(xsql.EQ(ID, id))
 	return s
 }
@@ -280,7 +289,7 @@ func (u *UpdateBuilder) Where(p ...UserWhere) *UpdateBuilder {
 }
 
 // SetID  set id
-func (u *UpdateBuilder) SetID(arg uint32) *UpdateBuilder {
+func (u *UpdateBuilder) SetID(arg int64) *UpdateBuilder {
 	u.builder.Set(ID, arg)
 	return u
 }
@@ -292,7 +301,7 @@ func (u *UpdateBuilder) SetName(arg string) *UpdateBuilder {
 }
 
 // SetAge  set age
-func (u *UpdateBuilder) SetAge(arg int32) *UpdateBuilder {
+func (u *UpdateBuilder) SetAge(arg int64) *UpdateBuilder {
 	u.builder.Set(Age, arg)
 	return u
 }
@@ -309,32 +318,20 @@ func (u *UpdateBuilder) SetCtime(arg time.Time) *UpdateBuilder {
 	return u
 }
 
-// SetMtime  set mtime
-func (u *UpdateBuilder) SetMtime(arg time.Time) *UpdateBuilder {
-	u.builder.Set(Mtime, arg)
+// SetAbit  set abit
+func (u *UpdateBuilder) SetAbit(arg []byte) *UpdateBuilder {
+	u.builder.Set(Abit, arg)
 	return u
 }
 
-// SetPic  set pic
-func (u *UpdateBuilder) SetPic(arg []byte) *UpdateBuilder {
-	u.builder.Set(Pic, arg)
-	return u
-}
-
-// AddPic  add  pic set x = x + arg
-func (u *UpdateBuilder) AddPic(arg interface{}) *UpdateBuilder {
-	u.builder.Add(Pic, arg)
-	return u
-}
-
-// SetBitT  set bit_t
-func (u *UpdateBuilder) SetBitT(arg []uint8) *UpdateBuilder {
-	u.builder.Set(BitT, arg)
+// SetAbinary  set abinary
+func (u *UpdateBuilder) SetAbinary(arg []byte) *UpdateBuilder {
+	u.builder.Set(Abinary, arg)
 	return u
 }
 
 // ByID  update by primary key
-func (u *UpdateBuilder) ByID(id uint32) *UpdateBuilder {
+func (u *UpdateBuilder) ByID(id int64) *UpdateBuilder {
 	u.builder.Where(xsql.EQ(ID, id))
 	return u
 }

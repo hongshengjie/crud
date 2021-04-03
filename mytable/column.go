@@ -2,6 +2,7 @@ package mytable
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/hongshengjie/crud/snaker"
 )
@@ -60,7 +61,13 @@ func MyTableColumns(db *sql.DB, schema string, table string) ([]*Column, error) 
 		if c.BigType == bigtypeCompareTime {
 			c.GoConditionType = "string"
 		}
+		if strings.Contains(c.GoColumnType, "int") {
+			c.GoColumnType = "int64"
+		}
 		res = append(res, &c)
+	}
+	if q.Err() != nil {
+		return nil, q.Err()
 	}
 
 	return res, nil
