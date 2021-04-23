@@ -152,8 +152,7 @@ db, _ = sql.Open("mysql","user:password@tcp(127.0.0.1:3306)/example?parseTime=tr
 		Age:   2,
 		Ctime: time.Now(),
 	}
-	// 如果是事务 需要调用相应的 CreateTx() 方法来设置内部的真正的执行者
-	// 由于tx 创建的时候就传入了ctx, 所以 在Save的时候就不许要传入ctx了
+	
 	err := user.Create(tx).SetUser(u2).Save(nil)
 	//tx.Rollback()
 	effect, err := user.Update(tx).SetAge(100).ByID(u2.ID).Save(nil)
@@ -177,7 +176,7 @@ db, _ = sql.Open("mysql","user:password@tcp(127.0.0.1:3306)/example?parseTime=tr
 	-  如果你不想所有的字段都生成、但是某个字段字段又不在索引，你可以指定 -fields=xxx,xx 
 
 4. 如何查看生成的sql做一些Debug自测工作
-	- 在你项目中某个位置（最好是dao.go文件初始化db的时候）添加一行xsql.Debug(), 在执行到的时候会已日志方式打印出相关的 sql 和 参数列表，记得上线的时候把这段代码删除，否则会有大量的sql
+	- 在你项目中某个位置（最好是dao.go文件初始化db的时候）添加一行xsql.Debug(), 在执行到的时候会已日志方式打印出相关的 sql 和 参数列表，记得上线的时候把这段代码删除，否则会有大量的sql日志
 
 
 ## TODO
