@@ -102,18 +102,6 @@ func (d *DeleteBuilder) Where(p ...{{$tableName}}Where) *DeleteBuilder {
 	return d
 }
 
-// WhereP arg is Predicate
-func (d *DeleteBuilder) WhereP(p *xsql.Predicate) *DeleteBuilder {
-	d.builder = d.builder.Where(p)
-	return d
-}
-
-// By{{.PrimaryKey.GoColumnName}}  delete by primary key
-func (d *DeleteBuilder) By{{.PrimaryKey.GoColumnName}}(id {{.PrimaryKey.GoColumnType}}) *DeleteBuilder {
-	d.builder = d.builder.Where(xsql.EQ({{.PrimaryKey.GoColumnName}}, id))
-	return d
-}
-
 // Exec Exec
 func (d *DeleteBuilder) Exec(ctx context.Context) (int64, error) {
 	del, args := d.builder.Query()
@@ -159,12 +147,6 @@ func (s *SelectBuilder) Table(name string) *SelectBuilder {
 	return s
 }
 
-
-// WhereP WhereP
-func (s *SelectBuilder) WhereP(p *xsql.Predicate) *SelectBuilder {
-	s.builder = s.builder.Where(p)
-	return s
-}
 //Where where
 func (s *SelectBuilder) Where(p ...{{$tableName}}Where) *SelectBuilder {
 	sel := &xsql.Selector{}
@@ -174,21 +156,16 @@ func (s *SelectBuilder) Where(p ...{{$tableName}}Where) *SelectBuilder {
 	s.builder = s.builder.Where(sel.P())
 	return s
 }
-// By{{.PrimaryKey.GoColumnName}} select by primary key
-func (s *SelectBuilder) By{{.PrimaryKey.GoColumnName}}(id {{.PrimaryKey.GoColumnType}}) *SelectBuilder {
-	s.builder.Where(xsql.EQ({{.PrimaryKey.GoColumnName}}, id))
-	return s
-}
 
 // Offset Offset
-func (s *SelectBuilder) Offset(offset int) *SelectBuilder {
-	s.builder = s.builder.Offset(offset)
+func (s *SelectBuilder) Offset(offset int64) *SelectBuilder {
+	s.builder = s.builder.Offset(int(offset))
 	return s
 }
 
 // Limit Limit
-func (s *SelectBuilder) Limit(limit int) *SelectBuilder {
-	s.builder = s.builder.Limit(limit)
+func (s *SelectBuilder) Limit(limit int64) *SelectBuilder {
+	s.builder = s.builder.Limit(int(limit))
 	return s
 }
 
@@ -272,17 +249,9 @@ func Update(dt xsql.Executor) *UpdateBuilder {
 	}
 }
 
-
-
 // Table  In the case of sub tables, you need this method, otherwise never use it
 func (u *UpdateBuilder) Table(name string) *UpdateBuilder {
 	u.builder.Table(name)
-	return u
-}
-
-// WhereP WhereP
-func (u *UpdateBuilder) WhereP(p *xsql.Predicate) *UpdateBuilder {
-	u.builder.Where(p)
 	return u
 }
 
@@ -315,12 +284,6 @@ func (u *UpdateBuilder) Where(p ...{{$tableName}}Where) *UpdateBuilder {
 	{{end}}
 
 {{ end }}
-
-// By{{.PrimaryKey.GoColumnName}}  update by primary key
-func (u *UpdateBuilder) By{{.PrimaryKey.GoColumnName}}(id {{.PrimaryKey.GoColumnType}}) *UpdateBuilder {
-	u.builder.Where(xsql.EQ({{.PrimaryKey.GoColumnName}}, id))
-	return u
-}
 
 // Save do a update statment  if tx can without context
 func (u *UpdateBuilder) Save(ctx context.Context) (int64, error) {

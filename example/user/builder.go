@@ -99,18 +99,6 @@ func (d *DeleteBuilder) Where(p ...UserWhere) *DeleteBuilder {
 	return d
 }
 
-// WhereP arg is Predicate
-func (d *DeleteBuilder) WhereP(p *xsql.Predicate) *DeleteBuilder {
-	d.builder = d.builder.Where(p)
-	return d
-}
-
-// ByID  delete by primary key
-func (d *DeleteBuilder) ByID(id int64) *DeleteBuilder {
-	d.builder = d.builder.Where(xsql.EQ(ID, id))
-	return d
-}
-
 // Exec Exec
 func (d *DeleteBuilder) Exec(ctx context.Context) (int64, error) {
 	del, args := d.builder.Query()
@@ -155,12 +143,6 @@ func (s *SelectBuilder) Table(name string) *SelectBuilder {
 	return s
 }
 
-// WhereP WhereP
-func (s *SelectBuilder) WhereP(p *xsql.Predicate) *SelectBuilder {
-	s.builder = s.builder.Where(p)
-	return s
-}
-
 //Where where
 func (s *SelectBuilder) Where(p ...UserWhere) *SelectBuilder {
 	sel := &xsql.Selector{}
@@ -171,21 +153,15 @@ func (s *SelectBuilder) Where(p ...UserWhere) *SelectBuilder {
 	return s
 }
 
-// ByID select by primary key
-func (s *SelectBuilder) ByID(id int64) *SelectBuilder {
-	s.builder.Where(xsql.EQ(ID, id))
-	return s
-}
-
 // Offset Offset
-func (s *SelectBuilder) Offset(offset int) *SelectBuilder {
-	s.builder = s.builder.Offset(offset)
+func (s *SelectBuilder) Offset(offset int64) *SelectBuilder {
+	s.builder = s.builder.Offset(int(offset))
 	return s
 }
 
 // Limit Limit
-func (s *SelectBuilder) Limit(limit int) *SelectBuilder {
-	s.builder = s.builder.Limit(limit)
+func (s *SelectBuilder) Limit(limit int64) *SelectBuilder {
+	s.builder = s.builder.Limit(int(limit))
 	return s
 }
 
@@ -272,12 +248,6 @@ func (u *UpdateBuilder) Table(name string) *UpdateBuilder {
 	return u
 }
 
-// WhereP WhereP
-func (u *UpdateBuilder) WhereP(p *xsql.Predicate) *UpdateBuilder {
-	u.builder.Where(p)
-	return u
-}
-
 // Where Where
 func (u *UpdateBuilder) Where(p ...UserWhere) *UpdateBuilder {
 	s := &xsql.Selector{}
@@ -315,12 +285,6 @@ func (u *UpdateBuilder) AddAge(arg interface{}) *UpdateBuilder {
 // SetCtime  set ctime
 func (u *UpdateBuilder) SetCtime(arg time.Time) *UpdateBuilder {
 	u.builder.Set(Ctime, arg)
-	return u
-}
-
-// ByID  update by primary key
-func (u *UpdateBuilder) ByID(id int64) *UpdateBuilder {
-	u.builder.Where(xsql.EQ(ID, id))
 	return u
 }
 
