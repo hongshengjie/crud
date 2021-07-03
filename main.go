@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"flag"
+	"io/ioutil"
+	"path/filepath"
 
 	"go/format"
 	"log"
@@ -29,6 +31,7 @@ var whereTmpl []byte
 var database string
 var dsn string
 var table string
+var path string
 
 //var fields string
 
@@ -36,12 +39,57 @@ func init() {
 	flag.StringVar(&database, "database", "mysql", "mysql or postgres")
 	flag.StringVar(&dsn, "dsn", "", "mysql connection url")
 	flag.StringVar(&table, "table", "", "table name")
-	//flag.StringVar(&fields, "fields", "", "split by comma, mark table‘s fields that can generate where condition method，default generate all index fields ; if fields = all generate all fields ;if fileds = id,xx,xxx,ctime generate id xx xxx citme fileds ")
+	flag.StringVar(&path, "path", "", ".sql file path or dir generate code from DDL sql file")
 }
 
 func main() {
 
 	flag.Parse()
+	switch database {
+	case "mysql":
+	case "postgres":
+	default:
+		log.Fatalln("database not right")
+	}
+
+	var tableObjs []*mytable.Table
+	if path != "" {
+		tableObjs = append(tableObjs, tableFromSql(path)...)
+	} else {
+		tableObjs = append(tableObjs, tableFromDB()...)
+	}
+	for _, v := range tableObjs {
+		generateFiles(v)
+	}
+}
+
+func tableFromSql(path string) (tableObjs []*mytable.Table) {
+	info, err := os.Stat(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if info.IsDir() {
+		fs, err := ioutil.ReadDir(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, v := range fs {
+			if !v.IsDir() && strings.HasSuffix(strings.ToLower(v.Name()), ".sql") {
+				obj := mytable.MytableFromSqlFile(database, filepath.Join(path, v.Name()))
+				if obj != nil {
+					tableObjs = append(tableObjs, obj)
+				}
+
+			}
+
+		}
+	} else {
+		tableObjs = append(tableObjs, mytable.MytableFromSqlFile(database, path))
+	}
+	return tableObjs
+}
+
+func tableFromDB() (tableObjs []*mytable.Table) {
 	if dsn == "" || table == "" {
 		log.Fatalln("dns or schema or table is empty")
 	}
@@ -56,34 +104,30 @@ func main() {
 	}
 	schema := temps2[0]
 
-	switch database {
-	case "mysql":
-	case "postgres":
-	default:
-		log.Fatalln("database not right")
-	}
-
 	db, err := sql.Open(database, dsn)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer db.Close()
-	// var isAll bool
+	tbs := strings.Split(table, ",")
+	for _, v := range tbs {
+		t := mytable.NewTable(db, database, schema, v, []string{}, true)
+		tableObjs = append(tableObjs, t)
+	}
+	return tableObjs
 
-	// if strings.TrimSpace(fields) == "all" {
-	// 	isAll = true
-	// }
-	// conditionFields := strings.Split(fields, ",")
-	table := mytable.NewTable(db, database, schema, table, []string{}, true)
+}
+
+func generateFiles(tableObj *mytable.Table) {
 	f := template.FuncMap{
 		"sqltool":  mytable.SQLTool,
 		"isnumber": mytable.IsNumber,
 	}
 	//创建目录
-	os.Mkdir(table.PackageName, os.ModePerm)
-	generateFile("model", string(modelTmpl), f, table)
-	generateFile("where", string(whereTmpl), f, table)
-	generateFile("builder", string(crudTmpl), f, table)
+	os.Mkdir(tableObj.PackageName, os.ModePerm)
+	generateFile("model", string(modelTmpl), f, tableObj)
+	generateFile("where", string(whereTmpl), f, tableObj)
+	generateFile("builder", string(crudTmpl), f, tableObj)
 
 }
 
@@ -103,7 +147,7 @@ func generateFile(name, tmpl string, f template.FuncMap, table *mytable.Table) {
 		log.Fatalln(err)
 	}
 	//写文件
-	fileName := table.PackageName + "/" + name + ".go"
+	fileName := filepath.Join(table.PackageName, name+".go")
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0766)
 	if err != nil {
 		log.Fatalln(err)

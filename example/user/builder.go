@@ -43,13 +43,13 @@ func (in *InsertBuilder) Save(ctx context.Context) (int64, error) {
 	if len(in.a) == 0 {
 		return 0, errors.New("please set a User")
 	}
-	in.builder.Columns(Name, Age, Abit, Abinary)
+	in.builder.Columns(Name, Age)
 
 	for _, a := range in.a {
 		if a == nil {
 			return 0, errors.New("can not insert a nil User")
 		}
-		in.builder.Values(a.Name, a.Age, a.Abit, a.Abinary)
+		in.builder.Values(a.Name, a.Age)
 	}
 
 	ins, args := in.builder.Query()
@@ -58,7 +58,7 @@ func (in *InsertBuilder) Save(ctx context.Context) (int64, error) {
 		return 0, err
 	}
 
-	if len(in.a) == 0 {
+	if len(in.a) == 1 {
 		id, err := result.LastInsertId()
 		if err != nil {
 			return 0, err
@@ -315,18 +315,6 @@ func (u *UpdateBuilder) AddAge(arg interface{}) *UpdateBuilder {
 // SetCtime  set ctime
 func (u *UpdateBuilder) SetCtime(arg time.Time) *UpdateBuilder {
 	u.builder.Set(Ctime, arg)
-	return u
-}
-
-// SetAbit  set abit
-func (u *UpdateBuilder) SetAbit(arg []byte) *UpdateBuilder {
-	u.builder.Set(Abit, arg)
-	return u
-}
-
-// SetAbinary  set abinary
-func (u *UpdateBuilder) SetAbinary(arg []byte) *UpdateBuilder {
-	u.builder.Set(Abinary, arg)
 	return u
 }
 
