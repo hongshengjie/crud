@@ -44,8 +44,15 @@ action:
 
 cd you_project/dao/
 
-crud -dsn='user:password@tcp(127.0.0.1:3306)/example?parseTime=true' -table=user
+crud -path user.sql
 
+OR
+
+crud -path ./sqlfile/
+
+OR
+
+crud -dsn='user:password@tcp(127.0.0.1:3306)/example?parseTime=true' -table=user
 
 result: 
 
@@ -71,10 +78,7 @@ crud
         
   -table string 指定表名
 
-  -fields string 默认生成索引字段相关的where语句的比较方法:
-  				如果all,所有数字和字符串字段生成相应的where语句比较方法;
-				如果指定字段,除了索引字段还会加上指定的字段相应的where语句比较方法;
-  				例如：-fileds=id,xx,xxx,ctime ; -fields=all  
+  -path string .sql file path or dir generate code from DDL sql file
         
 ```
 
