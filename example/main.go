@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/hongshengjie/crud/example/user"
 	"github.com/hongshengjie/xsql"
@@ -82,19 +83,26 @@ func UserExample() {
 
 	// effect, err = user.Delete(db).ByID(2).Exec(ctx)
 
-	// tx, _ := db.Begin()
-	// u2 := &user.User{
-	// 	ID:    0,
-	// 	Name:  "dfasd",
-	// 	Age:   2,
-	// 	Ctime: time.Now(),
-	// }
-	// err = user.Create(tx).SetUser(u2).Save(ctx)
-	// tx.Rollback()
+	tx, _ := db.Begin()
+	u2 := &user.User{
+		ID:    0,
+		Name:  "foo",
+		Age:   2,
+		Ctime: time.Now(),
+	}
+	_, err = user.Create(tx).SetUser(u2).Save(ctx)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
 
-	// effect, err = user.Update(tx).SetAge(100).ByID(u2.ID).Save(ctx)
-	// tx.Commit()
-	// fmt.Println(effect, err)
+	effect, err := user.Update(tx).SetAge(100).Where(user.IDEQ(1)).Save(ctx)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+	fmt.Println(effect, err)
 
 }
 func main() {
