@@ -6,7 +6,7 @@ import (
 	"errors"
 	"math"
 	"strings"
-	"time"
+	{{if .ImportTime}}"time"{{end}}
 	
 	".../{{.PackageName}}"
 	".../{{.PackageName}}/api"
@@ -31,10 +31,14 @@ func (s *{{.GoTableName}}ServiceImpl) CreateUser(ctx context.Context, req *api.{
 	a := &{{.PackageName}}.{{.GoTableName}}{
 		{{- range $index,$field := .Fields }}
 			{{- if ne .GoColumnType  "time.Time"}}
-				{{- if eq $field.IsPrimaryKey true}}
+				{{- if eq $field.IsAutoIncrment true}}
 					{{$field.GoColumnName}}:0,
 				{{- else }}
     				{{$field.GoColumnName}}:req.Get{{$field.GoColumnName}}(),
+				{{- end}}
+			{{- else}}
+				{{- if eq .IsDefaultCurrentTimestamp true}}	
+					{{$field.GoColumnName}}:time.Now(),
 				{{- end}}
 			{{- end}}  
 		{{- end}}  
@@ -55,12 +59,20 @@ func (s *{{.GoTableName}}ServiceImpl) CreateUser(ctx context.Context, req *api.{
 				{{- end}}
 			{{- end}}  
 	{{- end}}  
-	_, err = {{.PackageName}}.Create(s.db).Set{{.GoTableName}}(a).Save(ctx)
+	_, err = {{.PackageName}}.
+		Create(s.db).
+		Set{{.GoTableName}}(a).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after create and return
-	a2, err := {{.PackageName}}.Find(s.db).Where({{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(a.{{.PrimaryKey.GoColumnName}})).One(ctx)
+	a2, err := {{.PackageName}}.
+		Find(s.db).
+		Where(
+			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(a.{{.PrimaryKey.GoColumnName}}),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +81,12 @@ func (s *{{.GoTableName}}ServiceImpl) CreateUser(ctx context.Context, req *api.{
 
 // Delete{{.GoTableName}} Delete{{.GoTableName}}
 func (s *{{.GoTableName}}ServiceImpl) Deletes{{.GoTableName}}(ctx context.Context, req *api.{{.GoTableName}}{{.PrimaryKey.GoColumnName}}) (*emptypb.Empty, error) {
-	_, err := {{.PackageName}}.Delete(s.db).Where({{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.PrimaryKey.GoColumnName}}())).Exec(ctx)
+	_, err := {{.PackageName}}.
+		Delete(s.db).
+		Where(
+			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.PrimaryKey.GoColumnName}}()),
+		).
+		Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -111,12 +128,21 @@ func (s *{{.GoTableName}}ServiceImpl) Update{{.GoTableName}}(ctx context.Context
 		{{- end}}  
 		}
 	}
-	_, err := update.Where({{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.GoTableName}}().Get{{.PrimaryKey.GoColumnName}}())).Save(ctx)
+	_, err := update.
+		Where(
+			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.GoTableName}}().Get{{.PrimaryKey.GoColumnName}}()),
+		).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after update and return
-	a, err := {{.PackageName}}.Find(s.db).Where({{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.GoTableName}}().Get{{.PrimaryKey.GoColumnName}}())).One(ctx)
+	a, err := {{.PackageName}}.
+		Find(s.db).
+		Where(
+			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.GoTableName}}().Get{{.PrimaryKey.GoColumnName}}()),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +151,12 @@ func (s *{{.GoTableName}}ServiceImpl) Update{{.GoTableName}}(ctx context.Context
 
 // Get{{.GoTableName}} Get{{.GoTableName}}
 func (s *{{.GoTableName}}ServiceImpl) Get{{.GoTableName}}(ctx context.Context, req *api.{{.GoTableName}}{{.PrimaryKey.GoColumnName}}) (*api.{{.GoTableName}}, error) {
-	a, err := {{.PackageName}}.Find(s.db).Where({{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.PrimaryKey.GoColumnName}}())).One(ctx)
+	a, err := {{.PackageName}}.
+		Find(s.db).
+		Where(
+			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.PrimaryKey.GoColumnName}}()),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +190,10 @@ func (s *{{.GoTableName}}ServiceImpl) List{{.GoTableName}}s(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	count, err := {{.PackageName}}.Find(s.db).Count().Int64(ctx)
+	count, err := {{.PackageName}}.
+		Find(s.db).
+		Count().
+		Int64(ctx)
 	if err != nil {
 		return nil, err
 	}

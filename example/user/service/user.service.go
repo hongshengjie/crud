@@ -26,17 +26,27 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 	// 	return nil, errors.New(-1, "参数错误")
 	// }
 	a := &user.User{
-		Id:   0,
-		Name: req.GetName(),
-		Age:  req.GetAge(),
+		Id:    0,
+		Name:  req.GetName(),
+		Age:   req.GetAge(),
+		Ctime: time.Now(),
+		Mtime: time.Now(),
 	}
 	var err error
-	_, err = user.Create(s.db).SetUser(a).Save(ctx)
+	_, err = user.
+		Create(s.db).
+		SetUser(a).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after create and return
-	a2, err := user.Find(s.db).Where(user.IdEQ(a.Id)).One(ctx)
+	a2, err := user.
+		Find(s.db).
+		Where(
+			user.IdEQ(a.Id),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +55,12 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 
 // DeleteUser DeleteUser
 func (s *UserServiceImpl) DeletesUser(ctx context.Context, req *api.UserId) (*emptypb.Empty, error) {
-	_, err := user.Delete(s.db).Where(user.IdEQ(req.GetId())).Exec(ctx)
+	_, err := user.
+		Delete(s.db).
+		Where(
+			user.IdEQ(req.GetId()),
+		).
+		Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -79,12 +94,21 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 			update.SetMtime(t)
 		}
 	}
-	_, err := update.Where(user.IdEQ(req.GetUser().GetId())).Save(ctx)
+	_, err := update.
+		Where(
+			user.IdEQ(req.GetUser().GetId()),
+		).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after update and return
-	a, err := user.Find(s.db).Where(user.IdEQ(req.GetUser().GetId())).One(ctx)
+	a, err := user.
+		Find(s.db).
+		Where(
+			user.IdEQ(req.GetUser().GetId()),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +117,12 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 
 // GetUser GetUser
 func (s *UserServiceImpl) GetUser(ctx context.Context, req *api.UserId) (*api.User, error) {
-	a, err := user.Find(s.db).Where(user.IdEQ(req.GetId())).One(ctx)
+	a, err := user.
+		Find(s.db).
+		Where(
+			user.IdEQ(req.GetId()),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +156,10 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 	if err != nil {
 		return nil, err
 	}
-	count, err := user.Find(s.db).Count().Int64(ctx)
+	count, err := user.
+		Find(s.db).
+		Count().
+		Int64(ctx)
 	if err != nil {
 		return nil, err
 	}

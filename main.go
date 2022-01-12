@@ -40,8 +40,8 @@ var service bool
 //var fields string
 
 func init() {
-	flag.StringVar(&path, "path", "", ".sql file path or dir generate code from DDL sql file")
-	flag.BoolVar(&service, "service", false, "-service  generate proto meesage that matching table and generate service implement")
+	flag.StringVar(&path, "path", "", ".sql file path or folder")
+	flag.BoolVar(&service, "service", false, "-service  generate GRPC proto message and service implementation")
 }
 
 func main() {
