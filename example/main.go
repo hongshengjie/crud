@@ -1,0 +1,112 @@
+package main
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"time"
+
+	"github.com/hongshengjie/crud/example/user"
+	"github.com/hongshengjie/crud/xsql"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+//go:generate protoc --go_out=. --go-grpc_out=.  alltypetable.api.proto
+//go:generate protoc --go_out=. --go-grpc_out=.  user.api.proto
+
+var db *sql.DB
+var dsn = "root:123456@tcp(127.0.0.1:3306)/test?parseTime=true"
+var ctx = context.Background()
+
+func InitDB() {
+	var err error
+	db, err = sql.Open("mysql", dsn)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func UserExample() {
+
+	u := &user.User{
+		Name:  "testA",
+		Age:   22,
+		Ctime: time.Now(),
+	}
+	u1 := &user.User{
+		Name:  "testb",
+		Age:   22,
+		Ctime: time.Now(),
+	}
+	_, err := user.Create(db).SetUser(u).Save(ctx)
+	fmt.Println(err)
+
+	_, err = user.Create(db).SetUser(u1).Save(ctx)
+	fmt.Println(err)
+
+	au, err := user.Find(db).Where(
+		user.Or(
+			user.IdGT(10),
+			user.NameEQ("testb"),
+		)).
+		Offset(0).
+		Limit(3).
+		OrderAsc("name").
+		All(ctx)
+	fmt.Printf("%+v", au)
+	fmt.Println(err)
+
+	c, err := user.Find(db).Count(xsql.Distinct(user.Name)).Where(user.Or(
+		user.IdGT(10),
+		user.NameEQ("testb"),
+	)).Int64(ctx)
+	fmt.Println(c, err)
+
+	c1, err := user.Find(db).Select(user.Columns()...).Where(user.Or(
+		user.IdGT(10),
+		user.NameEQ("testb"),
+	)).All(ctx)
+	fmt.Println(c1, err)
+
+	c2, err := user.Find(db).Select(xsql.Sum(user.Age)).Where(user.Or(
+		user.IdGT(10),
+		user.NameEQ("testb"),
+	)).Int64(ctx)
+	fmt.Println(c2, err)
+
+	effect, err := user.Update(db).SetAge(100).SetName("java").Where(user.IdEQ(1)).Save(ctx)
+
+	effect, err = user.Update(db).AddAge(-100).SetName("java").Where(user.IdEQ(5)).Save(ctx)
+
+	effect, err = user.Delete(db).Where(user.And(user.IdEQ(3), user.IdIn(1, 3))).Exec(ctx)
+
+	effect, err = user.Delete(db).Where(user.IdEQ(2)).Exec(ctx)
+
+	tx, _ := db.Begin()
+	u2 := &user.User{
+		Id:    0,
+		Name:  "foo",
+		Age:   2,
+		Ctime: time.Now(),
+	}
+	_, err = user.Create(tx).SetUser(u2).Save(ctx)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+
+	effect, err = user.Update(tx).SetAge(100).Where(user.IdEQ(1)).Save(ctx)
+	if err != nil {
+		tx.Rollback()
+		return
+	}
+	tx.Commit()
+	fmt.Println(effect, err)
+
+}
+func main() {
+	InitDB()
+	//sqlbuild()
+	UserExample()
+}

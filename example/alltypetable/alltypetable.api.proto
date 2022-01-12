@@ -1,0 +1,115 @@
+syntax="proto3";
+
+option go_package = "/api";
+
+import "google/protobuf/empty.proto";
+
+service AllTypeTableService { 
+    rpc CreateAllTypeTable(AllTypeTable)returns(AllTypeTable);
+    rpc DeleteAllTypeTable(AllTypeTableId)returns(google.protobuf.Empty);
+    rpc UpdateAllTypeTable(UpdateAllTypeTableReq)returns(AllTypeTable);
+    rpc GetAllTypeTable(AllTypeTableId)returns(AllTypeTable);
+    rpc ListAllTypeTables(ListAllTypeTablesReq)returns(ListAllTypeTablesResp);
+}
+
+message AllTypeTable {
+    //自增id
+    int64	id = 1 ;
+    //小整型
+    int64	t_int = 2 ;
+    //
+    int64	s_int = 3 ;
+    //中整数
+    int64	m_int = 4 ;
+    //
+    int64	b_int = 5 ;
+    //
+    float	f32 = 6 ;
+    //
+    double	f64 = 7 ;
+    //
+    double	decimal_mysql = 8 ;
+    //
+    string	char_m = 9 ;
+    //
+    string	varchar_m = 10 ;
+    //
+    string	json_m = 11 ;
+    //
+    string	nvarchar_m = 12 ;
+    //
+    string	nchar_m = 13 ;
+    //
+    string	time_m = 14 ;
+    //
+    string	date_m = 15 ;
+    //
+    string	data_time_m = 16 ;
+    //创建时间
+    string	timestamp_m = 17 ;
+    //更新时间
+    string	timestamp_update = 18 ;
+    //年
+    string	year_m = 19 ;
+    //
+    string	t_text = 20 ;
+    //
+    string	m_text = 21 ;
+    //
+    string	text_m = 22 ;
+    //
+    string	l_text = 23 ;
+    //
+    bytes	binary_m = 24 ;
+    //
+    bytes	blob_m = 25 ;
+    //
+    bytes	l_blob = 26 ;
+    //
+    bytes	m_blob = 27 ;
+    //
+    bytes	t_blob = 28 ;
+    //
+    bytes	bit_m = 29 ;
+    //
+    string	enum_m = 30 ;
+    //
+    string	set_m = 31 ;
+    //
+    int64	bool_m = 32 ;  
+}
+
+message AllTypeTableId{
+    int64 id = 1 ;
+}
+
+message UpdateAllTypeTableReq{
+
+    AllTypeTable all_type_table = 1 ;
+
+    repeated string update_mask  = 2 ;
+}
+
+
+message ListAllTypeTablesReq{
+    // 
+    int64 page = 1 ;
+    // default 20
+    int64 page_size = 2 ;
+    // order by  for example :  [name] [-id]  -表示：倒序排序
+    repeated string orderby = 4 ; 
+    // 过滤条件需要自定义 for example  query name has 
+    string filter = 3 ;
+    // costom query filter
+    // string nameHas = 4 ; select * from all_type_table where name like '%{nameHas}%'
+ 
+}
+
+message ListAllTypeTablesResp{
+
+    repeated AllTypeTable all_type_tables = 1 ;
+
+    int64 total_count = 2 ;
+    
+    int64 page_count = 3 ;
+}
