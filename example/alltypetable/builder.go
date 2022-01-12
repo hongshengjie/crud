@@ -217,72 +217,24 @@ func (s *SelectBuilder) One(ctx context.Context) (*AllTypeTable, error) {
 	return results[0], nil
 }
 
-// Int64 count or select only one int field
+// Int64 count or select only one int64 field
 func (s *SelectBuilder) Int64(ctx context.Context) (int64, error) {
-	sqlstr, args := s.builder.Query()
-	q, err := s.eq.QueryContext(ctx, sqlstr, args...)
-	if err != nil {
-		return 0, err
-	}
-	defer q.Close()
-	return xsql.ScanInt64(q)
+	return xsql.Int64(ctx, s.builder, s.eq)
 }
 
 // Int64s return int64 slice
 func (s *SelectBuilder) Int64s(ctx context.Context) ([]int64, error) {
-	sqlstr, args := s.builder.Query()
-	q, err := s.eq.QueryContext(ctx, sqlstr, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer q.Close()
-	var arr []int64
-	for q.Next() {
-		var a int64
-		if err := q.Scan(&a); err != nil {
-			return nil, err
-		}
-		arr = append(arr, a)
-	}
-	if q.Err() != nil {
-		return nil, q.Err()
-	}
-
-	return arr, nil
+	return xsql.Int64s(ctx, s.builder, s.eq)
 }
 
 // String  String
 func (s *SelectBuilder) String(ctx context.Context) (string, error) {
-	sqlstr, args := s.builder.Query()
-	q, err := s.eq.QueryContext(ctx, sqlstr, args...)
-	if err != nil {
-		return "", err
-	}
-	defer q.Close()
-	return xsql.ScanString(q)
+	return xsql.String(ctx, s.builder, s.eq)
 }
 
 // Strings return string slice
 func (s *SelectBuilder) Strings(ctx context.Context) ([]string, error) {
-	sqlstr, args := s.builder.Query()
-	q, err := s.eq.QueryContext(ctx, sqlstr, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer q.Close()
-	var arr []string
-	for q.Next() {
-		var a string
-		if err := q.Scan(&a); err != nil {
-			return nil, err
-		}
-		arr = append(arr, a)
-	}
-	if q.Err() != nil {
-		return nil, q.Err()
-	}
-
-	return arr, nil
+	return xsql.Strings(ctx, s.builder, s.eq)
 }
 
 // All  return all results
@@ -582,7 +534,7 @@ func (u *UpdateBuilder) AddBoolM(arg interface{}) *UpdateBuilder {
 	return u
 }
 
-// Save do a update statmxsql  if tx can without context
+// Save do a update statment  if tx can without context
 func (u *UpdateBuilder) Save(ctx context.Context) (int64, error) {
 	up, args := u.builder.Query()
 	result, err := u.eq.ExecContext(ctx, up, args...)

@@ -26,34 +26,36 @@ func (s *AllTypeTableServiceImpl) CreateUser(ctx context.Context, req *api.AllTy
 	// 	return nil, errors.New(-1, "参数错误")
 	// }
 	a := &alltypetable.AllTypeTable{
-		Id:           0,
-		TInt:         req.GetTInt(),
-		SInt:         req.GetSInt(),
-		MInt:         req.GetMInt(),
-		BInt:         req.GetBInt(),
-		F32:          req.GetF32(),
-		F64:          req.GetF64(),
-		DecimalMysql: req.GetDecimalMysql(),
-		CharM:        req.GetCharM(),
-		VarcharM:     req.GetVarcharM(),
-		JsonM:        req.GetJsonM(),
-		NvarcharM:    req.GetNvarcharM(),
-		NcharM:       req.GetNcharM(),
-		TimeM:        req.GetTimeM(),
-		YearM:        req.GetYearM(),
-		TText:        req.GetTText(),
-		MText:        req.GetMText(),
-		TextM:        req.GetTextM(),
-		LText:        req.GetLText(),
-		BinaryM:      req.GetBinaryM(),
-		BlobM:        req.GetBlobM(),
-		LBlob:        req.GetLBlob(),
-		MBlob:        req.GetMBlob(),
-		TBlob:        req.GetTBlob(),
-		BitM:         req.GetBitM(),
-		EnumM:        req.GetEnumM(),
-		SetM:         req.GetSetM(),
-		BoolM:        req.GetBoolM(),
+		Id:              0,
+		TInt:            req.GetTInt(),
+		SInt:            req.GetSInt(),
+		MInt:            req.GetMInt(),
+		BInt:            req.GetBInt(),
+		F32:             req.GetF32(),
+		F64:             req.GetF64(),
+		DecimalMysql:    req.GetDecimalMysql(),
+		CharM:           req.GetCharM(),
+		VarcharM:        req.GetVarcharM(),
+		JsonM:           req.GetJsonM(),
+		NvarcharM:       req.GetNvarcharM(),
+		NcharM:          req.GetNcharM(),
+		TimeM:           req.GetTimeM(),
+		TimestampM:      time.Now(),
+		TimestampUpdate: time.Now(),
+		YearM:           req.GetYearM(),
+		TText:           req.GetTText(),
+		MText:           req.GetMText(),
+		TextM:           req.GetTextM(),
+		LText:           req.GetLText(),
+		BinaryM:         req.GetBinaryM(),
+		BlobM:           req.GetBlobM(),
+		LBlob:           req.GetLBlob(),
+		MBlob:           req.GetMBlob(),
+		TBlob:           req.GetTBlob(),
+		BitM:            req.GetBitM(),
+		EnumM:           req.GetEnumM(),
+		SetM:            req.GetSetM(),
+		BoolM:           req.GetBoolM(),
 	}
 	var err error
 	if a.DateM, err = time.ParseInLocation("2006-01-02", req.GetDateM(), time.Local); err != nil {
@@ -62,12 +64,20 @@ func (s *AllTypeTableServiceImpl) CreateUser(ctx context.Context, req *api.AllTy
 	if a.DataTimeM, err = time.ParseInLocation("2006-01-02 15:04:05", req.GetDataTimeM(), time.Local); err != nil {
 		return nil, err
 	}
-	_, err = alltypetable.Create(s.db).SetAllTypeTable(a).Save(ctx)
+	_, err = alltypetable.
+		Create(s.db).
+		SetAllTypeTable(a).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after create and return
-	a2, err := alltypetable.Find(s.db).Where(alltypetable.IdEQ(a.Id)).One(ctx)
+	a2, err := alltypetable.
+		Find(s.db).
+		Where(
+			alltypetable.IdEQ(a.Id),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +86,12 @@ func (s *AllTypeTableServiceImpl) CreateUser(ctx context.Context, req *api.AllTy
 
 // DeleteAllTypeTable DeleteAllTypeTable
 func (s *AllTypeTableServiceImpl) DeletesAllTypeTable(ctx context.Context, req *api.AllTypeTableId) (*emptypb.Empty, error) {
-	_, err := alltypetable.Delete(s.db).Where(alltypetable.IdEQ(req.GetId())).Exec(ctx)
+	_, err := alltypetable.
+		Delete(s.db).
+		Where(
+			alltypetable.IdEQ(req.GetId()),
+		).
+		Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -172,12 +187,21 @@ func (s *AllTypeTableServiceImpl) UpdateAllTypeTable(ctx context.Context, req *a
 			update.SetBoolM(req.GetAllTypeTable().GetBoolM())
 		}
 	}
-	_, err := update.Where(alltypetable.IdEQ(req.GetAllTypeTable().GetId())).Save(ctx)
+	_, err := update.
+		Where(
+			alltypetable.IdEQ(req.GetAllTypeTable().GetId()),
+		).
+		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after update and return
-	a, err := alltypetable.Find(s.db).Where(alltypetable.IdEQ(req.GetAllTypeTable().GetId())).One(ctx)
+	a, err := alltypetable.
+		Find(s.db).
+		Where(
+			alltypetable.IdEQ(req.GetAllTypeTable().GetId()),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +210,12 @@ func (s *AllTypeTableServiceImpl) UpdateAllTypeTable(ctx context.Context, req *a
 
 // GetAllTypeTable GetAllTypeTable
 func (s *AllTypeTableServiceImpl) GetAllTypeTable(ctx context.Context, req *api.AllTypeTableId) (*api.AllTypeTable, error) {
-	a, err := alltypetable.Find(s.db).Where(alltypetable.IdEQ(req.GetId())).One(ctx)
+	a, err := alltypetable.
+		Find(s.db).
+		Where(
+			alltypetable.IdEQ(req.GetId()),
+		).
+		One(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +249,10 @@ func (s *AllTypeTableServiceImpl) ListAllTypeTables(ctx context.Context, req *ap
 	if err != nil {
 		return nil, err
 	}
-	count, err := alltypetable.Find(s.db).Count().Int64(ctx)
+	count, err := alltypetable.
+		Find(s.db).
+		Count().
+		Int64(ctx)
 	if err != nil {
 		return nil, err
 	}
