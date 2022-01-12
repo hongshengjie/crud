@@ -30,19 +30,26 @@ func InitDB() {
 func UserExample() {
 
 	u := &user.User{
-		Name:  "testA",
-		Age:   22,
+		Id:    0,
+		Name:  "shengjie",
+		Age:   18,
 		Ctime: time.Now(),
+		Mtime: time.Now(),
 	}
 	u1 := &user.User{
-		Name:  "testb",
+		Id:    1,
+		Name:  "shengjie2",
 		Age:   22,
 		Ctime: time.Now(),
+		Mtime: time.Now(),
 	}
-	_, err := user.Create(db).SetUser(u).Save(ctx)
+	_, err := user.Create(xsql.Debug(db)).SetUser(u).Save(ctx)
 	fmt.Println(err)
 
-	_, err = user.Create(db).SetUser(u1).Save(ctx)
+	_, err = user.Create(db).SetUser(u1, u).Save(ctx)
+	fmt.Println(err)
+
+	_, err = user.Create(db).SetUser(u1, u).Upsert(ctx)
 	fmt.Println(err)
 
 	au, err := user.Find(db).Where(
@@ -76,19 +83,20 @@ func UserExample() {
 	fmt.Println(c2, err)
 
 	effect, err := user.Update(db).SetAge(100).SetName("java").Where(user.IdEQ(1)).Save(ctx)
-
-	effect, err = user.Update(db).AddAge(-100).SetName("java").Where(user.IdEQ(5)).Save(ctx)
-
+	fmt.Println(effect, err)
+	effect, err = user.Update(db).AddAge(100).SetName("java").Where(user.IdEQ(5)).Save(ctx)
+	fmt.Println(effect, err)
 	effect, err = user.Delete(db).Where(user.And(user.IdEQ(3), user.IdIn(1, 3))).Exec(ctx)
-
+	fmt.Println(effect, err)
 	effect, err = user.Delete(db).Where(user.IdEQ(2)).Exec(ctx)
-
+	fmt.Println(effect, err)
 	tx, _ := db.Begin()
 	u2 := &user.User{
 		Id:    0,
 		Name:  "foo",
 		Age:   2,
 		Ctime: time.Now(),
+		Mtime: time.Now(),
 	}
 	_, err = user.Create(tx).SetUser(u2).Save(ctx)
 	if err != nil {
@@ -107,6 +115,5 @@ func UserExample() {
 }
 func main() {
 	InitDB()
-	//sqlbuild()
 	UserExample()
 }

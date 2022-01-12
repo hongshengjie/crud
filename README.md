@@ -1,5 +1,5 @@
 
-# crud Mysql半ORM代码生成工具
+# crud is a mysql crud code generate tool
 
 ## 开始
 
@@ -22,8 +22,11 @@ crud 是一个非常易学好用的半ORM框架，使用crud可以让你快速�
 
 ### 安装
 
+```bash
+
 go install  github.com/hongshengjie/crud
 
+```
 ### 使用命令行
 
 ```bash
@@ -54,7 +57,9 @@ crud -path sql/user.sql -service
 
 ### 初始化db
 ```go
-db, _ = sql.Open("mysql","user:pwd@tcp(127.0.0.1:3306)/example?")
+
+db, _ = sql.Open("mysql","user:pwd@tcp(127.0.0.1:3306)/example?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8")
+
 ```
 
 
@@ -92,51 +97,51 @@ user
 
 #### 单条插入
 ```go
-	u := &user.User{
-		ID:    0,
-		Name:  "shengjie",
-		Age:   18,
-		Ctime: time.Now(),
-		Mtime: time.Now(),
-	}
-	effect, err := user.Create(db).SetUser(u).Save(ctx)
-	fmt.Println(err, u, effect)
+u := &user.User{
+	ID:    0,
+	Name:  "shengjie",
+	Age:   18,
+	Ctime: time.Now(),
+	Mtime: time.Now(),
+}
+effect, err := user.Create(db).SetUser(u).Save(ctx)
+fmt.Println(err, u, effect)
 ```
 > 插入单条记录 以上代码插入前需设置ID=0，ID字段为auto_increment，crud会把数据库生成的自增ID赋值给u.ID,插入后u.ID 为db为其生成的ID。
 
 #### 批量插入
 
 ```go
-	u1 := &user.User{
-		ID:   0,
-		Name: "shengjie",
-		Age:  22,
-		Ctime: time.Now(),
-		Mtime: time.Now(),
-	}
-	u2 := &user.User{
-		ID:   0,
-		Name: "shengjie2",
-		Age:  22,
-		Ctime: time.Now(),
-		Mtime: time.Now(),
-	}
-	list := []*user.User{u1, u2}
-	effect, err = user.Create(db).SetUser(list...).Save(ctx)
-	fmt.Println(effect, err, u1, u2)
+u1 := &user.User{
+	ID:   0,
+	Name: "shengjie",
+	Age:  22,
+	Ctime: time.Now(),
+	Mtime: time.Now(),
+}
+u2 := &user.User{
+	ID:   0,
+	Name: "shengjie2",
+	Age:  22,
+	Ctime: time.Now(),
+	Mtime: time.Now(),
+}
+list := []*user.User{u1, u2}
+effect, err = user.Create(db).SetUser(list...).Save(ctx)
+fmt.Println(effect, err, u1, u2)
 ```
 > 以上会插入2条记录，批量插入的时候无法获取到每条记录返回的LastInsertId, 所以执行插入后 u1 和u2 的ID都为0。
 
 #### upsert
 
 ```go
-	a := &user.User{
-		ID:   1,
-		Name: "shengjie",
-		Age:  19,
-	}
-	effect, err := user.Create(db).SetUser(a).Upsert(ctx)
-	fmt.Println(effect, err, a)
+a := &user.User{
+	ID:   1,
+	Name: "shengjie",
+	Age:  19,
+}
+effect, err := user.Create(db).SetUser(a).Upsert(ctx)
+fmt.Println(effect, err, a)
 ```
 
 > 如果插入的时候遇到唯一键冲突,那么会把所有字段全都更新为传入的新值。
@@ -150,53 +155,46 @@ user
 
 #### 查询单条记录
 ```go
-
-	u, err = user.Find(db).Where(user.IDEQ(1)).One(ctx)
-	fmt.Println(u, err)
+u, err = user.Find(db).Where(user.IDEQ(1)).One(ctx)
+fmt.Println(u, err)
 ```
 > One(ctx) 会自动设置查询语句limit = 1。
 
 
 #### 查询多条记录
 ```go
-
-    list, err := user.Find(db).Where(user.AgeIn(18, 20, 30)).All(ctx)
-	
-    liststr, _ := json.Marshal(list)
-	fmt.Printf("%+v %+v \n", string(liststr), err)
-
+list, err := user.Find(db).Where(user.AgeIn(18, 20, 30)).All(ctx)
+liststr, _ := json.Marshal(list)
+fmt.Printf("%+v %+v \n", string(liststr), err)
 ```
 > 查询年龄为18，20，30的所有记录，All(ctx)返回的是[]*user.User。
 
 ```go
-    list, err := user.Find(db)).
-		Where(user.Or(user.IDGT(97), user.AgeIn(10, 20, 30))).
-		OrderAsc(user.Age).
-		Offset(2).
-		Limit(20).
-		All(ctx)
-
-	fmt.Printf("%+v %+v \n", list, err)
+list, err := user.Find(db)).
+	Where(user.Or(user.IDGT(97), user.AgeIn(10, 20, 30))).
+	OrderAsc(user.Age).
+	Offset(2).
+	Limit(20).
+	All(ctx)
+fmt.Printf("%+v %+v \n", list, err)
 ```
 > 丰富的查询条件表达支持
 
-
 ```go
-	user.Find(db).Where(user.NameContains("java")).All(ctx)
-	user.Find(db).Where(user.NameHasPrefix("java")).All(ctx)
+list, err := user.Find(db).Where(user.NameContains("java")).All(ctx)
+list, err = user.Find(db).Where(user.NameHasPrefix("java")).All(ctx)
 ```
 > 字符串字段模糊查询和前缀匹配。
 
 
 #### 查询结果为单列
 ```go
-    // 查询数量
-    count, err := user.Find(db).Count().Where(user.IDGT(0)).Int64(ctx)
-	fmt.Println(count, err)
-    
-    // 查询单列
-    names, err := user.Find(db).Select(user.Name).Limit(2).Where(user.IDIn(1, 2, 3, 4)).Strings(ctx)
-	fmt.Println(names, err)
+// 查询数量
+count, err := user.Find(db).Count().Where(user.IDGT(0)).Int64(ctx)
+fmt.Println(count, err)
+// 查询单列
+names, err := user.Find(db).Select(user.Name).Limit(2).Where(user.IDIn(1, 2, 3, 4)).Strings(ctx)
+fmt.Println(names, err)
 ```
 > Count()查询符合条件记录的数量；如果返回结果只包含一列,且只有一行可以使用Int64、String ；如果返回的结果只包含一列，且有多行，可以用Int64s、Strings得到列表。
 
@@ -205,26 +203,25 @@ user
 ### 事务支持
 
 ```go
-	tx, err := db.Begin(ctx)
-	if err != nil {
-		return err
-	}
-	u1 := &user.User{
-		ID:   0,
-		Name: "shengjie",
-		Age:  18,
-	}
-	_, err = user.Create(tx).SetUser(u1).Save(ctx)
-	if err != nil {
-		return tx.Rollback()
-	}
-	effect, err := user.Update(tx).SetAge(100).Where(user.IDEQ(u1.ID)).Save(ctx)
-	if err != nil {
-		return tx.Rollback()
-	}
-	fmt.Println(effect, err)
-	return tx.Commit()
-
+tx, err := db.Begin(ctx)
+if err != nil {
+	return err
+}
+u1 := &user.User{
+	ID:   0,
+	Name: "shengjie",
+	Age:  18,
+}
+_, err = user.Create(tx).SetUser(u1).Save(ctx)
+if err != nil {
+	return tx.Rollback()
+}
+effect, err := user.Update(tx).SetAge(100).Where(user.IDEQ(u1.ID)).Save(ctx)
+if err != nil {
+	return tx.Rollback()
+}
+fmt.Println(effect, err)
+return tx.Commit()
 ```
 
 
@@ -233,22 +230,22 @@ user
 
 #### 自定义查询结果获取
 ```go
-    type GroupResutl struct {
-	    Name string `json:"name"` 
-	    Cnt  int64  `json:"cnt"`
-    }
+type GroupResutl struct {
+	Name string `json:"name"` 
+	Cnt  int64  `json:"cnt"`
+}
 
-    result := []*GroupResutl{}
-	err := user.Find(db).
-		Select(user.Name, xsql.As(xsql.Count("*"), "cnt")).
-		ForceIndex(`ix_name`).
-		GroupBy(user.Name).
-		Having(xsql.GT(`cnt`, 1)).
-		Slice(ctx, &result)
-    // SELECT `name`, COUNT(*) AS `cnt` FROM `user` FORCE INDEX (`ix_name`) GROUP BY `name` HAVING `cnt` > ? 
-	fmt.Println(err, result)
-	b, _ := json.Marshal(result)
-	fmt.Println(string(b))
+result := []*GroupResutl{}
+err := user.Find(db).
+	Select(user.Name, xsql.As(xsql.Count("*"), "cnt")).
+	ForceIndex(`ix_name`).
+	GroupBy(user.Name).
+	Having(xsql.GT(`cnt`, 1)).
+	Slice(ctx, &result)
+// SELECT `name`, COUNT(*) AS `cnt` FROM `user` FORCE INDEX (`ix_name`) GROUP BY `name` HAVING `cnt` > ? 
+fmt.Println(err, result)
+b, _ := json.Marshal(result)
+fmt.Println(string(b))
 
 ```
 > 以上使用了 Force Index 、 GroupBy 、 Having 、Count 、AS 、 把自定义查询结果扫描到自定义的结构体，其中结构体的json tag 需要和查询结果的返回的列名一致，结构体中的字段需要大写。
@@ -258,28 +255,26 @@ user
 
 ### Update
 ```go
-    // 使用WhereP可以通过 xsql包下的方法，生成比较复杂的自定义where条件，在调用Save()方法的时候在真正执行
-	effect, err := user.Update(db).SetAge(10).Where(user.NameEQ("java")).Save(ctx)
-	fmt.Println(effect, err)
+// 使用WhereP可以通过 xsql包下的方法，生成比较复杂的自定义where条件，在调用Save()方法的时候在真正执行
+effect, err := user.Update(db).SetAge(10).Where(user.NameEQ("java")).Save(ctx)
+fmt.Println(effect, err)
 
-    // 使用工具帮你生成的方法 IDEQ() SetName()  SetAge() 等方法
-	effect, err = user.Update(db).SetAge(100).SetName("java").SetName("python").Where(user.IDEQ(97)).Save(ctx)
-	fmt.Println(effect, err)
+// 使用工具帮你生成的方法 IDEQ() SetName()  SetAge() 等方法
+effect, err = user.Update(db).SetAge(100).SetName("java").SetName("python").Where(user.IDEQ(97)).Save(ctx)
+fmt.Println(effect, err)
 
-    // 数字字段可以使用AddAge()方法来生成 x = x + ? 这种表达式
-    // update `user` set `age` = COALESCE(`age`, 0) + -100, `name` = 'java' where `id` = 5
-	effect, err = user.Update(db).AddAge(-100).SetName("java").Where(user.IDEQ(97)).Save(ctx)
-	fmt.Println(effect, err)
+// 数字字段可以使用AddAge()方法来生成 x = x + ? 这种表达式
+// update `user` set `age` = COALESCE(`age`, 0) + -100, `name` = 'java' where `id` = 5
+effect, err = user.Update(db).AddAge(-100).SetName("java").Where(user.IDEQ(97)).Save(ctx)
+fmt.Println(effect, err)
 
 ```
 ### Delete
 ```go
 
-user.Delete(db).WhereP(xsql.EQ(user.ID, 32)).Exec(ctx)
+effect, err := user.Delete(db).WhereP(xsql.EQ(user.ID, 32)).Exec(ctx)
 
-user.Delete(db).Where(user.And(user.IDEQ(3), user.IDIn(1, 3))).Exec(ctx)
-
-user.Delete(db).ByID(2).Exec(ctx)
+effect, err = user.Delete(db).Where(user.And(user.IDEQ(3), user.IDIn(1, 3))).Exec(ctx)
 
 ```
 > 在调用Exec方法的时候才真正执行,线上数据库账号不一定有删除的权限，可以用update来改为软删除。
@@ -541,3 +536,7 @@ func convertUserList(list []*user.User) []*api.User {
 ```
 > 以上service的半实现代码只需要自己加一些参数校验，或者根据条件filter的代码，自动生成了db层model结构体的到api层的message转化代码,方便灵活。
 
+
+
+
+## It is inspired by [facebook/ent](https://github.com/ent/ent) and uses part of its code
