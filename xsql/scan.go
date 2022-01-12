@@ -56,6 +56,40 @@ func ScanInt64(rows ColumnScanner) (int64, error) {
 	return n, nil
 }
 
+// Int64 scans and returns an int64 from the rows columns.
+func Int64(ctx context.Context, query Querier, eq ExecQuerier) (int64, error) {
+	sqlstr, args := query.Query()
+	q, err := eq.QueryContext(ctx, sqlstr, args...)
+	if err != nil {
+		return 0, err
+	}
+	defer q.Close()
+	return ScanInt64(q)
+}
+
+// Int64s scans and returns an int64 slice form the rows columns
+func Int64s(ctx context.Context, query Querier, eq ExecQuerier) ([]int64, error) {
+	sqlstr, args := query.Query()
+	q, err := eq.QueryContext(ctx, sqlstr, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer q.Close()
+	var arr []int64
+	for q.Next() {
+		var a int64
+		if err := q.Scan(&a); err != nil {
+			return nil, err
+		}
+		arr = append(arr, a)
+	}
+	if q.Err() != nil {
+		return nil, q.Err()
+	}
+	return arr, nil
+
+}
+
 // ScanInt scans and returns an int from the rows columns.
 func ScanInt(rows ColumnScanner) (int, error) {
 	n, err := ScanInt64(rows)
@@ -72,6 +106,40 @@ func ScanString(rows ColumnScanner) (string, error) {
 		return "", err
 	}
 	return s, nil
+}
+
+// String scans and returns an string from the rows columns.
+func String(ctx context.Context, query Querier, eq ExecQuerier) (string, error) {
+	sqlstr, args := query.Query()
+	q, err := eq.QueryContext(ctx, sqlstr, args...)
+	if err != nil {
+		return "", err
+	}
+	defer q.Close()
+	return ScanString(q)
+}
+
+// Strings scans and returns an string slice form the rows columns
+func Strings(ctx context.Context, query Querier, eq ExecQuerier) ([]string, error) {
+	sqlstr, args := query.Query()
+	q, err := eq.QueryContext(ctx, sqlstr, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer q.Close()
+	var arr []string
+	for q.Next() {
+		var a string
+		if err := q.Scan(&a); err != nil {
+			return nil, err
+		}
+		arr = append(arr, a)
+	}
+	if q.Err() != nil {
+		return nil, q.Err()
+	}
+	return arr, nil
+
 }
 
 // ScanValue scans and returns a driver.Value from the rows columns.
