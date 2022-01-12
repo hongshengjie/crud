@@ -24,7 +24,7 @@ crud 是一个非常易学好用的半ORM框架，使用crud可以让你快速�
 
 ```bash
 
-go install  github.com/hongshengjie/crud
+go install  github.com/hongshengjie/crud@latest
 
 ```
 ### 使用命令行
@@ -287,7 +287,12 @@ effect, err = user.Delete(db).Where(user.And(user.IDEQ(3), user.IDIn(1, 3))).Exe
 ### 用法
 ```bash
 # 执行
-crud -path user.sql  -service
+
+scrud -path user.sql  -service
+
+cd user
+
+protoc --go_out=. --go-grpc_out=.  user.api.proto
 
 # 会生成如下目录
 user
@@ -404,9 +409,11 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 	// 	return nil, errors.New(-1, "参数错误")
 	// }
 	a := &user.User{
-		Id:   0,
-		Name: req.GetName(),
-		Age:  req.GetAge(),
+		Id:    0,
+		Name:  req.GetName(),
+		Age:   req.GetAge(),
+		Ctime: time.Now(),
+		Mtime: time.Now(),
 	}
 	var err error
 	_, err = user.Create(s.db).SetUser(a).Save(ctx)
@@ -531,7 +538,6 @@ func convertUserList(list []*user.User) []*api.User {
 	}
 	return ret
 }
-
 
 ```
 > 以上service的半实现代码只需要自己加一些参数校验，或者根据条件filter的代码，自动生成了db层model结构体的到api层的message转化代码,方便灵活。
