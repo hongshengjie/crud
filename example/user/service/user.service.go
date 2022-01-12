@@ -26,9 +26,11 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 	// 	return nil, errors.New(-1, "参数错误")
 	// }
 	a := &user.User{
-		Id:   0,
-		Name: req.GetName(),
-		Age:  req.GetAge(),
+		Id:    0,
+		Name:  req.GetName(),
+		Age:   req.GetAge(),
+		Ctime: time.Now(),
+		Mtime: time.Now(),
 	}
 	var err error
 	_, err = user.Create(s.db).SetUser(a).Save(ctx)

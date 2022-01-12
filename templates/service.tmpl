@@ -31,10 +31,14 @@ func (s *{{.GoTableName}}ServiceImpl) CreateUser(ctx context.Context, req *api.{
 	a := &{{.PackageName}}.{{.GoTableName}}{
 		{{- range $index,$field := .Fields }}
 			{{- if ne .GoColumnType  "time.Time"}}
-				{{- if eq $field.IsPrimaryKey true}}
+				{{- if eq $field.IsAutoIncrment true}}
 					{{$field.GoColumnName}}:0,
 				{{- else }}
     				{{$field.GoColumnName}}:req.Get{{$field.GoColumnName}}(),
+				{{- end}}
+			{{- else}}
+				{{- if eq .IsDefaultCurrentTimestamp true}}	
+					{{$field.GoColumnName}}:time.Now(),
 				{{- end}}
 			{{- end}}  
 		{{- end}}  
