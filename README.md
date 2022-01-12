@@ -58,7 +58,6 @@ Usage of crud:
 crud -path  sql/
 
 # Specify an SQL file generation
-
 crud -path sql/user.sql 
 
 # According to the table structure, generate the proto file of grpc interface and service semi implementation code for the CRUD of the table
@@ -142,8 +141,7 @@ u2 := &user.User{
 	Ctime: time.Now(),
 	Mtime: time.Now(),
 }
-list := []*user.User{u1, u2}
-effect, err = user.Create(db).SetUser(list...).Save(ctx)
+effect, err = user.Create(db).SetUser(u1,u2)Save(ctx)
 fmt.Println(effect, err, u1, u2)
 ```
 > The above two records will be inserted. The lastinsertid returned by each record cannot be obtained during batch insertion, so the ID of U1 and U2 after insertion are 0.

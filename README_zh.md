@@ -126,8 +126,7 @@ u2 := &user.User{
 	Ctime: time.Now(),
 	Mtime: time.Now(),
 }
-list := []*user.User{u1, u2}
-effect, err = user.Create(db).SetUser(list...).Save(ctx)
+effect, err = user.Create(db).SetUser(u1,u2)Save(ctx)
 fmt.Println(effect, err, u1, u2)
 ```
 > 以上会插入2条记录，批量插入的时候无法获取到每条记录返回的LastInsertId, 所以执行插入后 u1 和u2 的ID都为0。
