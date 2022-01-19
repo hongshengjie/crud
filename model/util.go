@@ -1,7 +1,13 @@
 package model
 
 import (
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
+
+	"golang.org/x/mod/modfile"
 )
 
 const (
@@ -196,4 +202,55 @@ func isASCIIUpper(c byte) bool {
 }
 func isASCIIDigit(c byte) bool {
 	return '0' <= c && c <= '9'
+}
+
+func GetCurrentPath() string {
+	exPath, _ := os.Getwd()
+	return exPath
+}
+
+func GetRelativePath() string {
+	modName, rootPath := GetModuleName()
+	pwd := GetCurrentPath()
+	relative := strings.TrimPrefix(pwd, rootPath)
+	return filepath.Join(modName, relative)
+}
+
+func GetModuleName() (string, string) {
+	mod := GoModFilePath()
+	if mod == "" {
+		return "", ""
+	}
+	f, err := ioutil.ReadFile(mod)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// module name and project root path
+	return modfile.ModulePath(f), strings.TrimSuffix(mod, "/go.mod")
+}
+
+func GoModFilePath() string {
+	exPath := GetCurrentPath()
+	gomodPath := []string{}
+	names := strings.Split(exPath, "/")
+	for k := range names {
+		if k > 0 {
+			prefix := "/" + filepath.Join(names[:k]...)
+			gomodPath = append(gomodPath, filepath.Join(prefix, "go.mod"))
+		}
+
+	}
+	for i := len(gomodPath)/2 - 1; i >= 0; i-- {
+		opp := len(gomodPath) - 1 - i
+		gomodPath[i], gomodPath[opp] = gomodPath[opp], gomodPath[i]
+	}
+	for _, v := range gomodPath {
+		if _, err := os.Stat(v); os.IsNotExist(err) {
+			continue
+		} else {
+			return v
+		}
+	}
+	return ""
+
 }

@@ -8,8 +8,8 @@ import (
 	"strings"
 	{{if .ImportTime}}"time"{{end}}
 	
-	".../{{.PackageName}}"
-	".../{{.PackageName}}/api"
+	"{{.RelativePath}}/{{.PackageName}}"
+	"{{.RelativePath}}/{{.PackageName}}/api"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 )

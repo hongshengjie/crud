@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"io/ioutil"
+	"os/exec"
 	"path/filepath"
 
 	"go/format"
@@ -97,7 +98,15 @@ func generateFiles(tableObj *model.Table) {
 	generateFile(filepath.Join(pkgName, "builder.go"), string(crudTmpl), f, tableObj)
 	if service {
 		generateFile(filepath.Join(pkgName, pkgName+".api.proto"), string(protoTmpl), f, tableObj)
+		//protoc --go_out=. --go-grpc_out=.  user.api.proto
+		cmd := exec.Command("protoc", "--go_out=.", "--go-grpc_out=.", pkgName+".api.proto")
+		cmd.Dir = filepath.Join(model.GetCurrentPath(), pkgName)
+		err := cmd.Run()
+		if err != nil {
+			log.Println(err)
+		}
 		os.Mkdir(filepath.Join(pkgName, "service"), os.ModePerm)
+		tableObj.RelativePath = model.GetRelativePath()
 		generateFile(filepath.Join(pkgName, "service", pkgName+".service.go"), string(serviceTmpl), f, tableObj)
 	}
 

@@ -10,6 +10,7 @@ type Table struct {
 	GenerateWhereCol []*Column // GenerateWhereCol 生成where字段比较方法的列
 	PrimaryKey       *Column   // priomary_key column
 	ImportTime       bool      // is need import time
+	RelativePath     string
 }
 
 // Column Column
