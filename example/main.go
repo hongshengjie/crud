@@ -14,7 +14,7 @@ import (
 
 //go:generate protoc --go_out=. --go-grpc_out=.  alltypetable.api.proto
 //go:generate protoc --go_out=. --go-grpc_out=.  user.api.proto
-
+//linux   protoc  -I . -I /usr/local/include --go_out=. --go-grpc_out=.  user.api.proto
 var db *sql.DB
 var dsn = "root:123456@tcp(127.0.0.1:3306)/test?parseTime=true"
 var ctx = context.Background()

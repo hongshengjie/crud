@@ -151,6 +151,13 @@ func (s *SelectBuilder) Where(p ...AllTypeTableWhere) *SelectBuilder {
 	return s
 }
 
+func (s *SelectBuilder) WhereP(ps ...*xsql.Predicate) *SelectBuilder {
+	for _, v := range ps {
+		s.builder.Where(v)
+	}
+	return s
+}
+
 // Offset Offset
 func (s *SelectBuilder) Offset(offset int64) *SelectBuilder {
 	s.builder = s.builder.Offset(int(offset))

@@ -37,12 +37,14 @@ var serviceTmpl []byte
 var database string
 var path string
 var service bool
+var protopkg string
 
 //var fields string
 
 func init() {
 	flag.StringVar(&path, "path", "", ".sql file path or folder")
 	flag.BoolVar(&service, "service", false, "-service  generate GRPC proto message and service implementation")
+	flag.StringVar(&protopkg, "protopkg", "", "-protopkg  proto package field value")
 }
 
 func main() {
@@ -97,16 +99,22 @@ func generateFiles(tableObj *model.Table) {
 	generateFile(filepath.Join(pkgName, "where.go"), string(whereTmpl), f, tableObj)
 	generateFile(filepath.Join(pkgName, "builder.go"), string(crudTmpl), f, tableObj)
 	if service {
+		if protopkg == "" {
+			log.Fatalln("protopkg is empty")
+		}
+		tableObj.RelativePath = model.GetRelativePath()
+		tableObj.Protopkg = protopkg
+		os.Mkdir(filepath.Join(tableObj.PackageName, "api"), os.ModePerm)
 		generateFile(filepath.Join(pkgName, pkgName+".api.proto"), string(protoTmpl), f, tableObj)
 		//protoc --go_out=. --go-grpc_out=.  user.api.proto
-		cmd := exec.Command("protoc", "--go_out=.", "--go-grpc_out=.", pkgName+".api.proto")
+		cmd := exec.Command("protoc", "-I.", "-I/usr/local/include", "--go_out=.", "--go-grpc_out=.", pkgName+".api.proto")
 		cmd.Dir = filepath.Join(model.GetCurrentPath(), pkgName)
-		err := cmd.Run()
+		log.Println(cmd.Dir, "exec:", cmd.String())
+		s, err := cmd.CombinedOutput()
 		if err != nil {
-			log.Println(err)
+			log.Println(string(s), err)
 		}
 		os.Mkdir(filepath.Join(pkgName, "service"), os.ModePerm)
-		tableObj.RelativePath = model.GetRelativePath()
 		generateFile(filepath.Join(pkgName, "service", pkgName+".service.go"), string(serviceTmpl), f, tableObj)
 	}
 

@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"github.com/hongshengjie/crud/xsql"
 	"math"
 	"strings"
 	"time"
@@ -233,26 +235,42 @@ func (s *AllTypeTableServiceImpl) ListAllTypeTables(ctx context.Context, req *ap
 	if offset < 0 {
 		offset = 0
 	}
-	find := alltypetable.Find(s.db).Offset(offset).Limit(size)
-	for _, v := range req.GetOrderby() {
-		if strings.HasPrefix(v, "-") {
-			find.OrderDesc(strings.TrimPrefix(v, "-"))
-			continue
+	finder := alltypetable.
+		Find(s.db).
+		Offset(offset).
+		Limit(size)
+
+	if req.GetOrderby() != "" {
+		odb := strings.TrimPrefix(req.GetOrderby(), "-")
+		if odb == req.GetOrderby() {
+			finder.OrderAsc(odb)
+		} else {
+			finder.OrderDesc(odb)
 		}
-		find.OrderAsc(v)
 	}
-	// costom filter
-	// {
-	// 	find.Where(alltypetable.NameContains(req.GetFilter()))
-	// }
-	list, err := find.All(ctx)
+	counter := alltypetable.
+		Find(s.db).
+		Count()
+
+	var ps []*xsql.Predicate
+	for _, v := range req.GetFilter() {
+		if !xsql.VailedOp(v.Op) {
+			return nil, fmt.Errorf("invalid Op %s", v.Op)
+		}
+		if strings.Contains(v.Field, " ") {
+			return nil, fmt.Errorf("invalid field %s ", v.Field)
+		}
+		exp := fmt.Sprintf("`%s` %s ?", v.Field, v.Op)
+		ap := xsql.ExprP(exp, v.GetValue())
+		ps = append(ps, ap)
+	}
+
+	list, err := finder.WhereP(ps...).All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	count, err := alltypetable.
-		Find(s.db).
-		Count().
-		Int64(ctx)
+
+	count, err := counter.WhereP(ps...).Int64(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -1,5 +1,7 @@
 syntax="proto3";
 
+package user;
+
 option go_package = "/api";
 
 import "google/protobuf/empty.proto";
@@ -42,14 +44,18 @@ message ListUsersReq{
     int64 page = 1 ;
     // default 20
     int64 page_size = 2 ;
-    // order by  for example :  [name] [-id]  -表示：倒序排序
-    repeated string orderby = 4 ; 
-    // 过滤条件需要自定义 for example  query name has 
-    string filter = 3 ;
-    // costom query filter
-    // string nameHas = 4 ; select * from user where name like '%{nameHas}%'
- 
+    // order by  for example :  [-id]  -表示：倒序排序
+    string orderby = 3 ; 
+     // filter
+    repeated UserFilter filter = 4 ;
 }
+
+message UserFilter{
+    string field = 1;
+    string op = 2;
+    string value = 3;
+}
+
 
 message ListUsersResp{
 

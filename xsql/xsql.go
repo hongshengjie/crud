@@ -1717,6 +1717,27 @@ var ops = [...]string{
 	OpIsNull:  "IS NULL",
 	OpNotNull: "IS NOT NULL",
 }
+var opsmap = map[string]Op{
+	"=":           OpEQ,
+	"<>":          OpNEQ,
+	">":           OpGT,
+	">=":          OpGT,
+	"<":           OpLT,
+	"<=":          OpLTE,
+	"IN":          OpIn,
+	"NOT IN":      OpNotIn,
+	"LIKE":        OpLike,
+	"IS NULL":     OpIsNull,
+	"IS NOT NULL": OpNotNull,
+}
+
+func VailedOp(op string) bool {
+	o := strings.ToUpper(strings.TrimSpace(op))
+	if _, ok := opsmap[o]; ok {
+		return true
+	}
+	return false
+}
 
 // WriteOp writes an operator to the builder.
 func (b *Builder) WriteOp(op Op) *Builder {

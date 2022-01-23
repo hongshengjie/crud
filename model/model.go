@@ -11,6 +11,7 @@ type Table struct {
 	PrimaryKey       *Column   // priomary_key column
 	ImportTime       bool      // is need import time
 	RelativePath     string
+	Protopkg         string
 }
 
 // Column Column
