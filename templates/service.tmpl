@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
-	"fmt"
 	"math"
 	"strings"
 	{{if .ImportTime}}"time"{{end}}
@@ -20,7 +18,11 @@ import (
 
 // {{.GoTableName}}ServiceImpl {{.GoTableName}}ServiceImpl
 type {{.GoTableName}}ServiceImpl struct {
-	db *sql.DB
+	db xsql.ExecQuerier
+}
+
+func (s *{{.GoTableName}}ServiceImpl) SetDB(db xsql.ExecQuerier) {
+	s.db = db
 }
 
 // Create{{.GoTableName}} Create{{.GoTableName}}
@@ -195,12 +197,11 @@ func (s *{{.GoTableName}}ServiceImpl) List{{.GoTableName}}s(ctx context.Context,
 
 	var ps []*xsql.Predicate
 	for _, v := range req.GetFilter() {
-		if !xsql.VailedOp(v.Op) {
-			return nil, fmt.Errorf("invalid Op %s", v.Op)
+		p, err := xsql.GenP(v.Field, v.Op, v.Value)
+		if err != nil {
+			return nil, err
 		}
-		exp := fmt.Sprintf("`%s` %s ?", v.Field, v.Op)
-		ap := xsql.ExprP(exp, v.GetValue())
-		ps = append(ps, ap)
+		ps = append(ps, p)
 	}
 
 	list, err := finder.WhereP(ps...).All(ctx)

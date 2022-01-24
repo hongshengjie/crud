@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/hongshengjie/crud/xsql"
 	"math"
 	"strings"
@@ -17,7 +15,11 @@ import (
 
 // UserServiceImpl UserServiceImpl
 type UserServiceImpl struct {
-	db *sql.DB
+	db xsql.ExecQuerier
+}
+
+func (s *UserServiceImpl) SetDB(db xsql.ExecQuerier) {
+	s.db = db
 }
 
 // CreateUser CreateUser
@@ -161,15 +163,11 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 
 	var ps []*xsql.Predicate
 	for _, v := range req.GetFilter() {
-		if !xsql.VailedOp(v.Op) {
-			return nil, fmt.Errorf("invalid Op %s", v.Op)
+		p, err := xsql.GenP(v.Field, v.Op, v.Value)
+		if err != nil {
+			return nil, err
 		}
-		if strings.Contains(v.Field, " ") {
-			return nil, fmt.Errorf("invalid field %s ", v.Field)
-		}
-		exp := fmt.Sprintf("`%s` %s ?", v.Field, v.Op)
-		ap := xsql.ExprP(exp, v.GetValue())
-		ps = append(ps, ap)
+		ps = append(ps, p)
 	}
 
 	list, err := finder.WhereP(ps...).All(ctx)

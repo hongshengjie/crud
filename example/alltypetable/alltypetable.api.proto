@@ -1,7 +1,4 @@
 syntax="proto3";
-
-package alltype;
-
 option go_package = "/api";
 
 import "google/protobuf/empty.proto";

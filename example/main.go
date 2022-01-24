@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/hongshengjie/crud/example/user"
+	"github.com/hongshengjie/crud/example/user/api"
+	"github.com/hongshengjie/crud/example/user/service"
 	"github.com/hongshengjie/crud/xsql"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -191,6 +194,27 @@ func UserSelect() {
 }
 
 func main() {
+
 	InitDB()
-	UserExample()
+	ListUsers()
+}
+
+func ListUsers() {
+	s := service.UserServiceImpl{}
+	s.SetDB(xsql.Debug(db))
+	r, err := s.ListUsers(ctx, &api.ListUsersReq{
+		Page:     1,
+		PageSize: 20,
+		Orderby:  "-id",
+		Filter: []*api.UserFilter{
+			{
+				Field: "name",
+				Op:    "in",
+				Value: "java,shengjie",
+			},
+		},
+	})
+	rr, _ := json.Marshal(r)
+	fmt.Println(string(rr), err)
+
 }

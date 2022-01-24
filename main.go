@@ -99,9 +99,6 @@ func generateFiles(tableObj *model.Table) {
 	generateFile(filepath.Join(pkgName, "where.go"), string(whereTmpl), f, tableObj)
 	generateFile(filepath.Join(pkgName, "builder.go"), string(crudTmpl), f, tableObj)
 	if service {
-		if protopkg == "" {
-			log.Fatalln("protopkg is empty")
-		}
 		tableObj.RelativePath = model.GetRelativePath()
 		tableObj.Protopkg = protopkg
 		os.Mkdir(filepath.Join(tableObj.PackageName, "api"), os.ModePerm)

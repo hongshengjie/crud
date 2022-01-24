@@ -1,7 +1,9 @@
 syntax="proto3";
 
+{{- $c:=ne .Protopkg ""}}
+{{- if $c}}
 package {{.Protopkg}};
-
+{{- end}}
 option go_package = "/api";
 
 import "google/protobuf/empty.proto";
