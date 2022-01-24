@@ -440,7 +440,7 @@ user
 usr.api.proto
 ```proto
 syntax="proto3";
-
+package user;
 option go_package = "/api";
 
 import "google/protobuf/empty.proto";
@@ -483,14 +483,18 @@ message ListUsersReq{
     int64 page = 1 ;
     // default 20
     int64 page_size = 2 ;
-    // order by  for example :  [name] [-id]  -表示：倒序排序
-    repeated string orderby = 4 ; 
-    // 过滤条件需要自定义 for example  query name has 
-    string filter = 3 ;
-    // costom query filter
-    // string nameHas = 4 ; select * from user where name like '%{nameHas}%'
- 
+    // order by  for example :  [-id]  -表示：倒序排序
+    string orderby = 3 ; 
+     // filter
+    repeated UserFilter filter = 4 ;
 }
+
+message UserFilter{
+    string field = 1;
+    string op = 2;
+    string value = 3;
+}
+
 
 message ListUsersResp{
 
@@ -512,8 +516,8 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
+	"github.com/hongshengjie/crud/xsql"
 	"math"
 	"strings"
 	"time"
@@ -525,7 +529,11 @@ import (
 
 // UserServiceImpl UserServiceImpl
 type UserServiceImpl struct {
-	db *sql.DB
+	db xsql.ExecQuerier
+}
+
+func (s *UserServiceImpl) SetDB(db xsql.ExecQuerier) {
+	s.db = db
 }
 
 // CreateUser CreateUser
@@ -533,7 +541,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 
 	// do some parameter check
 	// if req.GetXXXX() != 0 {
-	// 	return nil, errors.New(-1, "parameter error")
+	// 	return nil, errors.New(-1, "参数错误")
 	// }
 	a := &user.User{
 		Id:    0,
@@ -555,7 +563,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 		Find(s.db).
 		Where(
 			user.IdEQ(a.Id),
-			).
+		).
 		One(ctx)
 	if err != nil {
 		return nil, err
@@ -569,7 +577,7 @@ func (s *UserServiceImpl) DeletesUser(ctx context.Context, req *api.UserId) (*em
 		Delete(s.db).
 		Where(
 			user.IdEQ(req.GetId()),
-			).
+		).
 		Exec(ctx)
 	if err != nil {
 		return nil, err
@@ -650,26 +658,38 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 	if offset < 0 {
 		offset = 0
 	}
-	find := user.Find(s.db).Offset(offset).Limit(size)
-	for _, v := range req.GetOrderby() {
-		if strings.HasPrefix(v, "-") {
-			find.OrderDesc(strings.TrimPrefix(v, "-"))
-			continue
+	finder := user.
+		Find(s.db).
+		Offset(offset).
+		Limit(size)
+
+	if req.GetOrderby() != "" {
+		odb := strings.TrimPrefix(req.GetOrderby(), "-")
+		if odb == req.GetOrderby() {
+			finder.OrderAsc(odb)
+		} else {
+			finder.OrderDesc(odb)
 		}
-		find.OrderAsc(v)
 	}
-	// costom filter
-	// {
-	// 	find.Where(user.NameContains(req.GetFilter()))
-	// }
-	list, err := find.All(ctx)
+	counter := user.
+		Find(s.db).
+		Count()
+
+	var ps []*xsql.Predicate
+	for _, v := range req.GetFilter() {
+		p, err := xsql.GenP(v.Field, v.Op, v.Value)
+		if err != nil {
+			return nil, err
+		}
+		ps = append(ps, p)
+	}
+
+	list, err := finder.WhereP(ps...).All(ctx)
 	if err != nil {
 		return nil, err
 	}
-	count, err := user.
-		Find(s.db).
-		Count().
-		Int64(ctx)
+
+	count, err := counter.WhereP(ps...).Int64(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -695,6 +715,7 @@ func convertUserList(list []*user.User) []*api.User {
 	}
 	return ret
 }
+
 
 ```
 > The semi implementation code of the above service only needs to add some parameter verification, or automatically generate the message conversion code from the DB layer model structure to the API layer according to the code of the condition filter, which is convenient and flexible.
