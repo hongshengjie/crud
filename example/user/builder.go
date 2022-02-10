@@ -18,6 +18,7 @@ type InsertBuilder struct {
 	builder *xsql.InsertBuilder
 	a       []*User
 	upsert  bool
+	timeout time.Duration
 }
 
 // Create Create
@@ -26,6 +27,12 @@ func Create(eq xsql.ExecQuerier) *InsertBuilder {
 		builder: xsql.Insert(table),
 		eq:      eq,
 	}
+}
+
+// Timeout SetTimeout
+func (in *InsertBuilder) Timeout(t time.Duration) *InsertBuilder {
+	in.timeout = t
+	return in
 }
 
 // SetUser SetUser
@@ -58,7 +65,8 @@ func (in *InsertBuilder) Save(ctx context.Context) (int64, error) {
 		}
 		in.builder.Values(a.Id, a.Name, a.Age, a.Ctime, a.Mtime)
 	}
-
+	_,ctx, cancel:=xsql.Shrink(ctx,in.timeout)
+	defer cancel()
 	ins, args := in.builder.Query()
 	result, err := in.eq.ExecContext(ctx, ins, args...)
 	if err != nil {
@@ -82,6 +90,7 @@ func (in *InsertBuilder) Save(ctx context.Context) (int64, error) {
 type DeleteBuilder struct {
 	builder *xsql.DeleteBuilder
 	eq      xsql.ExecQuerier
+	timeout time.Duration
 }
 
 // Delete Delete
@@ -91,6 +100,13 @@ func Delete(eq xsql.ExecQuerier) *DeleteBuilder {
 		eq:      eq,
 	}
 }
+
+// Timeout SetTimeout
+func (d *DeleteBuilder)Timeout(t time.Duration) *DeleteBuilder {
+	d.timeout = t
+	return d
+}
+
 
 // Where  UserWhere
 func (d *DeleteBuilder) Where(p ...UserWhere) *DeleteBuilder {
@@ -104,6 +120,8 @@ func (d *DeleteBuilder) Where(p ...UserWhere) *DeleteBuilder {
 
 // Exec Exec
 func (d *DeleteBuilder) Exec(ctx context.Context) (int64, error) {
+	_,ctx, cancel:=xsql.Shrink(ctx,d.timeout)
+	defer cancel()
 	del, args := d.builder.Query()
 	res, err := d.eq.ExecContext(ctx, del, args...)
 	if err != nil {
@@ -117,6 +135,7 @@ type SelectBuilder struct {
 	builder   *xsql.Selector
 	eq        xsql.ExecQuerier
 	selectAll bool
+	timeout time.Duration
 }
 
 // Find Find
@@ -128,6 +147,13 @@ func Find(eq xsql.ExecQuerier) *SelectBuilder {
 	sel.builder = sel.builder.From(xsql.Table(table))
 	return sel
 }
+
+// Timeout SetTimeout
+func (s *SelectBuilder)Timeout(t time.Duration) *SelectBuilder {
+	s.timeout = t
+	return s
+}
+
 
 // Select Select
 func (s *SelectBuilder) Select(columns ...string) *SelectBuilder {
@@ -202,6 +228,8 @@ func (s *SelectBuilder) Having(p *xsql.Predicate) *SelectBuilder {
 
 // Slice Slice scan query result to slice
 func (s *SelectBuilder) Slice(ctx context.Context, dstSlice interface{}) error {
+	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
+	defer cancel()
 	sqlstr, args := s.builder.Query()
 	q, err := s.eq.QueryContext(ctx, sqlstr, args...)
 	if err != nil {
@@ -213,6 +241,8 @@ func (s *SelectBuilder) Slice(ctx context.Context, dstSlice interface{}) error {
 
 // One One
 func (s *SelectBuilder) One(ctx context.Context) (*User, error) {
+	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
+	defer cancel()
 	s.builder.Limit(1)
 	results, err := s.All(ctx)
 	if err != nil {
@@ -226,26 +256,37 @@ func (s *SelectBuilder) One(ctx context.Context) (*User, error) {
 
 // Int64 count or select only one int64 field
 func (s *SelectBuilder) Int64(ctx context.Context) (int64, error) {
+	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
+	defer cancel()
 	return xsql.Int64(ctx, s.builder, s.eq)
 }
 
 // Int64s return int64 slice
 func (s *SelectBuilder) Int64s(ctx context.Context) ([]int64, error) {
+	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
+	defer cancel()
 	return xsql.Int64s(ctx, s.builder, s.eq)
 }
 
 // String  String
 func (s *SelectBuilder) String(ctx context.Context) (string, error) {
+	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
+	defer cancel()
 	return xsql.String(ctx, s.builder, s.eq)
 }
 
 // Strings return string slice
 func (s *SelectBuilder) Strings(ctx context.Context) ([]string, error) {
+	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
+	defer cancel()
 	return xsql.Strings(ctx, s.builder, s.eq)
 }
 
 // All  return all results
 func (s *SelectBuilder) All(ctx context.Context) ([]*User, error) {
+	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
+	defer cancel()
+	
 	if s.builder.SelectColumnsLen() <= 0 {
 		s.builder.Select(columns...)
 		s.selectAll = true
@@ -281,6 +322,7 @@ func (s *SelectBuilder) All(ctx context.Context) ([]*User, error) {
 type UpdateBuilder struct {
 	builder *xsql.UpdateBuilder
 	eq      xsql.ExecQuerier
+	timeout time.Duration
 }
 
 // Update return a UpdateBuilder
@@ -289,6 +331,12 @@ func Update(eq xsql.ExecQuerier) *UpdateBuilder {
 		eq:      eq,
 		builder: xsql.Update(table),
 	}
+}
+
+// Timeout SetTimeout
+func (u *UpdateBuilder)Timeout(t time.Duration) *UpdateBuilder {
+	u.timeout = t
+	return u
 }
 
 // Where Where
@@ -339,6 +387,8 @@ func (u *UpdateBuilder) SetMtime(arg time.Time) *UpdateBuilder {
 
 // Save do a update statment  if tx can without context
 func (u *UpdateBuilder) Save(ctx context.Context) (int64, error) {
+	_,ctx, cancel:=xsql.Shrink(ctx,u.timeout)
+	defer cancel()
 	up, args := u.builder.Query()
 	result, err := u.eq.ExecContext(ctx, up, args...)
 	if err != nil {
