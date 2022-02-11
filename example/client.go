@@ -1,12 +1,37 @@
-package example
+package crud
 
 import (
 	"context"
 	"database/sql"
 
+	"github.com/hongshengjie/crud/example/alltypetable"
 	"github.com/hongshengjie/crud/example/user"
 	"github.com/hongshengjie/crud/xsql"
 )
+
+type Client struct {
+	config       *xsql.Config
+	db           *xsql.DB
+	AllTypeTable *AllTypeTableClient
+	User         *UserClient
+}
+
+func (c *Client) init() {
+	c.AllTypeTable = &AllTypeTableClient{eq: c.db, config: c.config}
+	c.User = &UserClient{eq: c.db, config: c.config}
+}
+
+type Tx struct {
+	config       *xsql.Config
+	tx           *sql.Tx
+	AllTypeTable *AllTypeTableClient
+	User         *UserClient
+}
+
+func (tx *Tx) init() {
+	tx.AllTypeTable = &AllTypeTableClient{eq: tx.tx, config: tx.config}
+	tx.User = &UserClient{eq: tx.tx, config: tx.config}
+}
 
 func NewClient(config *xsql.Config) (*Client, error) {
 	db, err := xsql.NewMySQL(config)
@@ -18,17 +43,11 @@ func NewClient(config *xsql.Config) (*Client, error) {
 	return c, nil
 }
 
-type Client struct {
-	config *xsql.Config
-	db     *xsql.DB
-	User   *UserClient
+func (c *Client) Begin(ctx context.Context) (*Tx, error) {
+	return c.BeginTx(ctx, nil)
 }
 
-func (c *Client) init() {
-	c.User = &UserClient{eq: c.db, config: c.config}
-}
-
-func (c *Client) Begin(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
+func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	tx, err := c.db.Master().BeginTx(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -38,21 +57,33 @@ func (c *Client) Begin(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	return t, nil
 }
 
-type Tx struct {
-	config *xsql.Config
-	tx     *sql.Tx
-	User   *UserClient
-}
-
-func (tx *Tx) init() {
-	tx.User = &UserClient{eq: tx.tx, config: tx.config}
-}
 func (tx *Tx) Rollback() error {
 	return tx.tx.Rollback()
 }
 
 func (tx *Tx) Commit() error {
 	return tx.tx.Commit()
+}
+
+type AllTypeTableClient struct {
+	eq     xsql.ExecQuerier
+	config *xsql.Config
+}
+
+func (c *AllTypeTableClient) Find() *alltypetable.SelectBuilder {
+	return alltypetable.Find(c.eq).Timeout(c.config.QueryTimeout)
+}
+
+func (c *AllTypeTableClient) Create() *alltypetable.InsertBuilder {
+	return alltypetable.Create(c.eq).Timeout(c.config.ExecTimeout)
+}
+
+func (c *AllTypeTableClient) Update() *alltypetable.UpdateBuilder {
+	return alltypetable.Update(c.eq).Timeout(c.config.ExecTimeout)
+}
+
+func (c *AllTypeTableClient) Delete() *alltypetable.DeleteBuilder {
+	return alltypetable.Delete(c.eq).Timeout(c.config.ExecTimeout)
 }
 
 type UserClient struct {

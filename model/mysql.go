@@ -74,7 +74,7 @@ func MysqlColumn(ddl *sqlparser.DDL) ([]*Column, error) {
 	return res, nil
 }
 
-func MysqlTable(db string, path string) *Table {
+func MysqlTable(db, path, relative string) *Table {
 	sql, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
@@ -118,6 +118,7 @@ func MysqlTable(db string, path string) *Table {
 	}
 
 	mytable.GenerateWhereCol = mytable.Fields
+	mytable.RelativePath = relative
 	return mytable
 
 }

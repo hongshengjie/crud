@@ -34,6 +34,9 @@ var protoTmpl []byte
 //go:embed "templates/service.tmpl"
 var serviceTmpl []byte
 
+//go:embed "templates/client.tmpl"
+var clientTmpl []byte
+
 var database string
 var path string
 var service bool
@@ -57,9 +60,14 @@ func main() {
 	for _, v := range tableObjs {
 		generateFiles(v)
 	}
+	if len(tableObjs) > 1 {
+		generateFile("client.go", string(clientTmpl), f, tableObjs)
+	}
+
 }
 
 func tableFromSql(path string) (tableObjs []*model.Table) {
+	relativePath := model.GetRelativePath()
 	info, err := os.Stat(path)
 	if err != nil {
 		log.Fatal(err)
@@ -71,7 +79,7 @@ func tableFromSql(path string) (tableObjs []*model.Table) {
 		}
 		for _, v := range fs {
 			if !v.IsDir() && strings.HasSuffix(strings.ToLower(v.Name()), ".sql") {
-				obj := model.MysqlTable(database, filepath.Join(path, v.Name()))
+				obj := model.MysqlTable(database, filepath.Join(path, v.Name()), relativePath)
 				if obj != nil {
 					tableObjs = append(tableObjs, obj)
 				}
@@ -80,26 +88,26 @@ func tableFromSql(path string) (tableObjs []*model.Table) {
 
 		}
 	} else {
-		tableObjs = append(tableObjs, model.MysqlTable(database, path))
+		tableObjs = append(tableObjs, model.MysqlTable(database, path, relativePath))
 	}
 	return tableObjs
 }
 
-func generateFiles(tableObj *model.Table) {
-	f := template.FuncMap{
-		"sqltool":  model.SQLTool,
-		"isnumber": model.IsNumber,
-		"Incr":     model.Incr,
-	}
-	pkgName := tableObj.PackageName
+var f = template.FuncMap{
+	"sqltool":  model.SQLTool,
+	"isnumber": model.IsNumber,
+	"Incr":     model.Incr,
+}
 
+func generateFiles(tableObj *model.Table) {
+
+	pkgName := tableObj.PackageName
 	//创建目录
 	os.Mkdir(tableObj.PackageName, os.ModePerm)
 	generateFile(filepath.Join(pkgName, "model.go"), string(modelTmpl), f, tableObj)
 	generateFile(filepath.Join(pkgName, "where.go"), string(whereTmpl), f, tableObj)
 	generateFile(filepath.Join(pkgName, "builder.go"), string(crudTmpl), f, tableObj)
 	if service {
-		tableObj.RelativePath = model.GetRelativePath()
 		tableObj.Protopkg = protopkg
 		os.Mkdir(filepath.Join(tableObj.PackageName, "api"), os.ModePerm)
 		generateFile(filepath.Join(pkgName, pkgName+".api.proto"), string(protoTmpl), f, tableObj)
@@ -117,13 +125,13 @@ func generateFiles(tableObj *model.Table) {
 
 }
 
-func generateFile(filename, tmpl string, f template.FuncMap, table *model.Table) {
+func generateFile(filename, tmpl string, f template.FuncMap, data interface{}) {
 	tpl, err := template.New(filename).Funcs(f).Parse(string(tmpl))
 	if err != nil {
 		log.Fatalln(err)
 	}
 	bs := bytes.NewBuffer(nil)
-	err = tpl.Execute(bs, table)
+	err = tpl.Execute(bs, data)
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -4,9 +4,43 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/hongshengjie/crud/example/user"
+	
 	"github.com/hongshengjie/crud/xsql"
+
+	{{- range $index,$table := . }}
+   	"{{$table.RelativePath}}/{{$table.PackageName}}"
+	{{- end}}  
+
 )
+
+type Client struct {
+	config *xsql.Config
+	db     *xsql.DB
+	{{- range $index,$table := . }}
+   	{{$table.GoTableName}} *{{$table.GoTableName}}Client
+	{{- end}} 
+}
+
+func (c *Client) init() {
+	{{- range $index,$table := . }}
+   	c.{{$table.GoTableName}} =  &{{$table.GoTableName}}Client{eq: c.db, config: c.config}
+	{{- end}} 
+}
+
+type Tx struct {
+	config *xsql.Config
+	tx     *sql.Tx
+
+	{{- range $index,$table := . }}
+   	{{$table.GoTableName}} *{{$table.GoTableName}}Client
+	{{- end}} 
+}
+
+func (tx *Tx) init() {
+	{{- range $index,$table := . }}
+   	tx.{{$table.GoTableName}} =  &{{$table.GoTableName}}Client{eq: tx.tx, config: tx.config}
+	{{- end}} 
+}
 
 func NewClient(config *xsql.Config) (*Client, error) {
 	db, err := xsql.NewMySQL(config)
@@ -18,17 +52,11 @@ func NewClient(config *xsql.Config) (*Client, error) {
 	return c, nil
 }
 
-type Client struct {
-	config *xsql.Config
-	db     *xsql.DB
-	User   *UserClient
+func (c *Client) Begin(ctx context.Context) (*Tx, error) {
+	return c.BeginTx(ctx, nil)
 }
 
-func (c *Client) init() {
-	c.User = &UserClient{eq: c.db, config: c.config}
-}
-
-func (c *Client) Begin(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
+func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	tx, err := c.db.Master().BeginTx(ctx, opts)
 	if err != nil {
 		return nil, err
@@ -38,15 +66,6 @@ func (c *Client) Begin(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	return t, nil
 }
 
-type Tx struct {
-	config *xsql.Config
-	tx     *sql.Tx
-	User   *UserClient
-}
-
-func (tx *Tx) init() {
-	tx.User = &UserClient{eq: tx.tx, config: tx.config}
-}
 func (tx *Tx) Rollback() error {
 	return tx.tx.Rollback()
 }
@@ -55,23 +74,27 @@ func (tx *Tx) Commit() error {
 	return tx.tx.Commit()
 }
 
-type UserClient struct {
+
+{{- range $index,$table := . }}
+type {{$table.GoTableName}}Client struct {
 	eq     xsql.ExecQuerier
 	config *xsql.Config
 }
-
-func (c *UserClient) Find() *user.SelectBuilder {
-	return user.Find(c.eq).Timeout(c.config.QueryTimeout)
+func (c *{{$table.GoTableName}}Client) Find() *{{$table.PackageName}}.SelectBuilder {
+	return {{$table.PackageName}}.Find(c.eq).Timeout(c.config.QueryTimeout)
 }
 
-func (c *UserClient) Create() *user.InsertBuilder {
-	return user.Create(c.eq).Timeout(c.config.ExecTimeout)
+func (c *{{$table.GoTableName}}Client) Create() *{{$table.PackageName}}.InsertBuilder {
+	return {{$table.PackageName}}.Create(c.eq).Timeout(c.config.ExecTimeout)
 }
 
-func (c *UserClient) Update() *user.UpdateBuilder {
-	return user.Update(c.eq).Timeout(c.config.ExecTimeout)
+func (c *{{$table.GoTableName}}Client) Update() *{{$table.PackageName}}.UpdateBuilder {
+	return {{$table.PackageName}}.Update(c.eq).Timeout(c.config.ExecTimeout)
 }
 
-func (c *UserClient) Delete() *user.DeleteBuilder {
-	return user.Delete(c.eq).Timeout(c.config.ExecTimeout)
+func (c *{{$table.GoTableName}}Client) Delete() *{{$table.PackageName}}.DeleteBuilder {
+	return {{$table.PackageName}}.Delete(c.eq).Timeout(c.config.ExecTimeout)
 }
+
+{{- end}} 
+

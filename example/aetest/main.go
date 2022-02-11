@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hongshengjie/crud/example"
+	crud "github.com/hongshengjie/crud/example"
 	"github.com/hongshengjie/crud/example/user"
 	"github.com/hongshengjie/crud/example/user/api"
 	"github.com/hongshengjie/crud/example/user/service"
@@ -32,18 +32,16 @@ func InitDB() {
 
 }
 
-var db2 *xsql.DB
-var uc *example.Client
+var uc *crud.Client
 
 func InitDB2() {
-	db2, _ = xsql.NewMySQL(&xsql.Config{
+	uc, _ = crud.NewClient(&xsql.Config{
 		DSN:         dsn,
 		ReadDSN:     []string{dsn},
 		Active:      10,
 		Idle:        10,
 		IdleTimeout: time.Hour,
 	})
-	uc = &example.Client{}
 }
 
 func UserExample() {
@@ -193,14 +191,14 @@ func UserExample() {
 
 }
 func UserSelect() {
-	us, _ := user.Find(db2).
+	us, _ := user.Find(db).
 		Select().
 		Where(
 			user.AgeGT(10),
 		).
 		All(ctx)
 
-	us2, err := user.Find(db2).
+	us2, err := user.Find(db).
 		Select(user.Columns()...).
 		Where(
 			user.AgeGT(10),
@@ -215,7 +213,7 @@ func main() {
 	InitDB2()
 	//e, err := user.Update(db).SetAge(10).Where(user.IdEQ(4)).WithTimeOut(time.Millisecond * 250).Save(ctx)
 
-	e, err := user.Find(db2).Timeout(time.Millisecond * 30).All(ctx)
+	e, err := user.Find(db).Timeout(time.Millisecond * 30).All(ctx)
 	fmt.Println(e, err)
 	uc.User.Find().Select().All(ctx)
 
@@ -226,7 +224,7 @@ func main() {
 
 func ListUsers() {
 	s := service.UserServiceImpl{}
-	s.SetDB(db2)
+	s.SetDB(db)
 	r, err := s.ListUsers(ctx, &api.ListUsersReq{
 		Page:     1,
 		PageSize: 20,
