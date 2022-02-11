@@ -3,14 +3,13 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/hongshengjie/crud/xsql"
 	"math"
 	"strings"
 	"time"
 
-	"github.com/hongshengjie/crud/xsql"
-
-	"github.com/hongshengjie/crud/example/user"
-	"github.com/hongshengjie/crud/example/user/api"
+	"github.com/hongshengjie/crud/internal/example/user"
+	"github.com/hongshengjie/crud/internal/example/user/api"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

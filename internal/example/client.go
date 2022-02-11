@@ -4,8 +4,8 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/hongshengjie/crud/example/alltypetable"
-	"github.com/hongshengjie/crud/example/user"
+	"github.com/hongshengjie/crud/internal/example/alltypetable"
+	"github.com/hongshengjie/crud/internal/example/user"
 	"github.com/hongshengjie/crud/xsql"
 )
 

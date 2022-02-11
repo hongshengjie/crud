@@ -1,4 +1,5 @@
 syntax="proto3";
+package example;
 option go_package = "/api";
 
 import "google/protobuf/empty.proto";
@@ -91,11 +92,11 @@ message UpdateAllTypeTableReq{
 
 
 message ListAllTypeTablesReq{
-    // 
+    // number of page
     int64 page = 1 ;
     // default 20
     int64 page_size = 2 ;
-    // order by  for example :  [-id]  -表示：倒序排序
+    // order by  for example :  [-id]  -: DESC 
     string orderby = 3 ; 
      // filter
     repeated AllTypeTableFilter filter = 4 ;

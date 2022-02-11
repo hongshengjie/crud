@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"time"
 
-	crud "github.com/hongshengjie/crud/example"
-	"github.com/hongshengjie/crud/example/user"
-	"github.com/hongshengjie/crud/example/user/api"
-	"github.com/hongshengjie/crud/example/user/service"
+	crud "github.com/hongshengjie/crud/internal/example"
+	"github.com/hongshengjie/crud/internal/example/user"
+	"github.com/hongshengjie/crud/internal/example/user/api"
+	"github.com/hongshengjie/crud/internal/example/user/service"
 	"github.com/hongshengjie/crud/xsql"
 
 	_ "github.com/go-sql-driver/mysql"

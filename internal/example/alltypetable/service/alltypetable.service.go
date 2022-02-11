@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hongshengjie/crud/example/alltypetable"
-	"github.com/hongshengjie/crud/example/alltypetable/api"
+	"github.com/hongshengjie/crud/internal/example/alltypetable"
+	"github.com/hongshengjie/crud/internal/example/alltypetable/api"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
