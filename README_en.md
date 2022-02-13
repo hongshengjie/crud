@@ -45,22 +45,21 @@ go install  github.com/hongshengjie/crud@latest
 crud -h 
 
 Usage of crud:
-
-  -path string
-    	.sql file path or dir that contain .sql files
+  -protopkg string
+        -protopkg  proto package field value
   -service
-    	-service generate proto message that matching table and service implement
+        -service  generate GRPC proto message and service implementation
 ```
 
 ```example
-# Batch generation from directories containing SQL files
-crud -path  sql/
+#  generation crud directory
+crud init
 
-# Specify an SQL file generation
-crud -path sql/user.sql 
+# Put user.sql In the crud directory sql
+
 
 # According to the table structure, generate the proto file of grpc interface and service semi implementation code for the CRUD of the table
-crud -path sql/user.sql -service
+crud  -service -protopkg example
 
 ```
 
@@ -72,6 +71,27 @@ crud -path sql/user.sql -service
 
 db, _ = sql.Open("mysql","user:pwd@tcp(127.0.0.1:3306)/example?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8")
 
+```
+
+### Or the client wrapped in curd has read-write separation and context read-write timeout configuration
+
+```go
+
+var client *crud.Client
+
+var dsn = "root:123456@tcp(127.0.0.1:3306)/test?parseTime=true"
+
+func InitDB2() {
+	client, _ = crud.NewClient(&xsql.Config{
+		DSN:          dsn,
+		ReadDSN:      []string{dsn},
+		Active:       10,
+		Idle:         10,
+		IdleTimeout:  time.Hour,
+		QueryTimeout: time.Second,
+		ExecTimeout:  time.Second,
+	})
+}
 ```
 
 
@@ -91,15 +111,17 @@ CREATE TABLE `user` (
 ```
 
 ```bash
+# exec bcurd under example
+crud 
 
-crud -path user.sql 
-
-# The following directories and files will be generated
-user
-├── builder.gen.go // Builder containing insert, select, update, delete SQL statements
-├── model.gen.go   // Generate the golang struct corresponding to the table structure
-└── where.gen.go   // Query where condition constructor for each field
- （=,>,>=,<>,<,<=,in,not in, like）
+# The following user directories and files will be generated
+example/
+├── crud
+│   ├── user
+│   │   ├── builder.go
+│   │   ├── model.go
+│   │   └── where.go
+│   └── user.sql
 
 ```
 > The user directory is generated above, and the package name is user.
@@ -412,26 +434,40 @@ fmt.Println(err)
 
 This function helps us generate a lot of cumbersome code that needs to be written by ourselves. For example, a project needs to manage the background, and the interfaces for adding, deleting, modifying and querying need to be built. If we can complete the interface writing with a little modification on the basis of the generated code, the business interface will be realized quickly and with quality.
 
+### Dependencies
+
+1. protoc
+2. protoc-gen-go
+3. protoc-gen-go-grpc
+4. make sure /usr/local/include have google/protobuf/empty.proto file
+
+
+```
+go install google.golang.org/protobuf/cmd/protoc-gen-go
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+```
+
 ### usage
 ```bash
 
-scrud -path user.sql  -service
-
-cd user
-
-protoc --go_out=. --go-grpc_out=.  user.api.proto
+crud -service -protopkg example
 
 
-user
+example/
 ├── api
-│   └── user.api.pb.proto
-│   └── user.api_grpc.pb.proto
-├── service
-│   └── user.service.go
-├── builder.gen.go
-├── model.gen.go
-├── user.api.proto
-└── where.gen.go
+│   ├── user.api_grpc.pb.go
+│   └── user.api.pb.go
+├── crud
+│   ├── aa_client.go
+│   ├── user
+│   │   ├── builder.go
+│   │   ├── model.go
+│   │   └── where.go
+│   └── user.sql
+├── proto
+│   └── user.api.proto
+└── service
+    └── user.service.go
 
 ```
 > There are more api and service directories and proto files.
@@ -517,23 +553,19 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/hongshengjie/crud/internal/example/api"
+	"github.com/hongshengjie/crud/internal/example/crud"
+	"github.com/hongshengjie/crud/internal/example/crud/user"
 	"github.com/hongshengjie/crud/xsql"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"math"
 	"strings"
 	"time"
-
-	"github.com/hongshengjie/crud/example/user"
-	"github.com/hongshengjie/crud/example/user/api"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // UserServiceImpl UserServiceImpl
 type UserServiceImpl struct {
-	db xsql.ExecQuerier
-}
-
-func (s *UserServiceImpl) SetDB(db xsql.ExecQuerier) {
-	s.db = db
+	Client *crud.Client
 }
 
 // CreateUser CreateUser
@@ -551,16 +583,16 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 		Mtime: time.Now(),
 	}
 	var err error
-	_, err = user.
-		Create(s.db).
+	_, err = s.Client.User.
+		Create().
 		SetUser(a).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after create and return
-	a2, err := user.
-		Find(s.db).
+	a2, err := s.Client.Master.User.
+		Find().
 		Where(
 			user.IdEQ(a.Id),
 		).
@@ -573,8 +605,8 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 
 // DeleteUser DeleteUser
 func (s *UserServiceImpl) DeletesUser(ctx context.Context, req *api.UserId) (*emptypb.Empty, error) {
-	_, err := user.
-		Delete(s.db).
+	_, err := s.Client.User.
+		Delete().
 		Where(
 			user.IdEQ(req.GetId()),
 		).
@@ -591,7 +623,7 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 	if len(req.GetUpdateMask()) == 0 {
 		return nil, errors.New("update_mask empty")
 	}
-	update := user.Update(s.db)
+	update := s.Client.User.Update()
 	for _, v := range req.GetUpdateMask() {
 		switch v {
 		case "user.name":
@@ -621,8 +653,8 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 		return nil, err
 	}
 	// query after update and return
-	a, err := user.
-		Find(s.db).
+	a, err := s.Client.Master.User.
+		Find().
 		Where(
 			user.IdEQ(req.GetUser().GetId()),
 		).
@@ -635,8 +667,8 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 
 // GetUser GetUser
 func (s *UserServiceImpl) GetUser(ctx context.Context, req *api.UserId) (*api.User, error) {
-	a, err := user.
-		Find(s.db).
+	a, err := s.Client.User.
+		Find().
 		Where(
 			user.IdEQ(req.GetId()),
 		).
@@ -658,8 +690,8 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 	if offset < 0 {
 		offset = 0
 	}
-	finder := user.
-		Find(s.db).
+	finder := s.Client.User.
+		Find().
 		Offset(offset).
 		Limit(size)
 
@@ -671,8 +703,8 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 			finder.OrderDesc(odb)
 		}
 	}
-	counter := user.
-		Find(s.db).
+	counter := s.Client.User.
+		Find().
 		Count()
 
 	var ps []*xsql.Predicate
@@ -715,7 +747,6 @@ func convertUserList(list []*user.User) []*api.User {
 	}
 	return ret
 }
-
 
 ```
 > The semi implementation code of the above service only needs to add some parameter verification, or automatically generate the message conversion code from the DB layer model structure to the API layer according to the code of the condition filter, which is convenient and flexible.

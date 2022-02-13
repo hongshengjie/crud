@@ -46,7 +46,7 @@ var protopkg string
 const defaultDir = "crud"
 
 func init() {
-	flag.StringVar(&path, "path", "", ".sql file path or folder")
+	//flag.StringVar(&path, "path", "cr", ".sql file path or folder")
 	flag.BoolVar(&service, "service", false, "-service  generate GRPC proto message and service implementation")
 	flag.StringVar(&protopkg, "protopkg", "", "-protopkg  proto package field value")
 }
@@ -55,6 +55,17 @@ func main() {
 
 	flag.Parse()
 
+	// subcommand
+	if len(os.Args) == 2 {
+		switch os.Args[1] {
+		case "init":
+			//create crud dir
+			if err := os.Mkdir(defaultDir, os.ModePerm); err != nil {
+				log.Fatal(err)
+			}
+			return
+		}
+	}
 	if len(os.Args) == 1 {
 		info, err := os.Stat(defaultDir)
 		if err != nil {
@@ -69,16 +80,8 @@ func main() {
 			path = defaultDir
 		}
 	}
-	// subcommand
-	if len(os.Args) == 2 {
-		switch os.Args[1] {
-		case "init":
-			//create crud dir
-			if err := os.Mkdir(defaultDir, os.ModePerm); err != nil {
-				log.Fatal(err)
-			}
-			return
-		}
+	if path == "" {
+		path = defaultDir
 	}
 
 	tableObjs, isDir := tableFromSql(path)

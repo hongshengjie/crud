@@ -35,22 +35,20 @@ go install  github.com/hongshengjie/crud@latest
 crud -h 
 
 Usage of crud:
-
-  -path string
-    	.sql file path or dir that contain .sql files
+  -protopkg string
+        -protopkg  proto package field value
   -service
-    	-service generate proto message that matching table and service implement
+        -service  generate GRPC proto message and service implementation
 ```
 
 ```example
-# 从包含sql的文件的目录批量生成
-crud -path  sql/
+在项目下创建crud目录
+crud init
 
-# 指定某个sql文件生成
-crud -path sql/user.sql 
+在crud目录放入user.sql
 
 # 根据表结构 生成针对该表的增删改查GRPC接口的proto文件以及 Service半实现代码
-crud -path sql/user.sql -service
+crud -service -protopkg example
 
 ```
 
@@ -59,9 +57,27 @@ crud -path sql/user.sql -service
 
 ### 初始化db
 ```go
-
 db, _ = sql.Open("mysql","user:pwd@tcp(127.0.0.1:3306)/example?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8")
 
+```
+
+### 或者使用curd包装的client, 拥有读写分离，Context读写超时配置
+```go
+var client *crud.Client
+
+var dsn = "root:123456@tcp(127.0.0.1:3306)/test?parseTime=true"
+
+func InitDB2() {
+	client, _ = crud.NewClient(&xsql.Config{
+		DSN:          dsn,
+		ReadDSN:      []string{dsn},
+		Active:       10,
+		Idle:         10,
+		IdleTimeout:  time.Hour,
+		QueryTimeout: time.Second,
+		ExecTimeout:  time.Second,
+	})
+}
 ```
 
 
@@ -80,15 +96,17 @@ CREATE TABLE `user` (
 ```
 
 ```bash
-# 执行
-
-crud -path user.sql 
+# 在example执行
+crud  
 
 # 会生成如下目录
-user
-├── builder.gen.go // 包含Insert,Select,Update,Delete SQL语句的builder
-├── model.gen.go   // 生成和表结构对应的golang 结构体 
-└── where.gen.go   // 针对每个字段的查询Where条件构造函数 （=,>,>=,<>,<,<=,in,not in, like）
+example/
+├── crud
+│   ├── user
+│   │   ├── builder.go
+│   │   ├── model.go
+│   │   └── where.go
+│   └── user.sql
 
 ```
 > 以上生成user目录，且package 名称为user。
@@ -396,30 +414,44 @@ fmt.Println(err)
 
 这个功能帮助我们生成很多需要自己手写的繁琐代码，比如某个项目需要管理后台，增删改查的接口都是需要搭建的，假如在生成的代码的基础上做少许修改就能完成接口编写，那么业务接口实现的会又快又有质量。
 
+### 要提前安装的工具
+
+1. protoc
+2. protoc-gen-go
+3. protoc-gen-go-grpc
+4. make sure /usr/local/include have google/protobuf/empty.proto file
+
+```
+go install google.golang.org/protobuf/cmd/protoc-gen-go
+go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
+
+```
+
 ### 用法
 ```bash
 # 执行
 
-scrud -path user.sql  -service
-
-cd user
-
-protoc --go_out=. --go-grpc_out=.  user.api.proto
+crud -service -protopkg example
 
 # 会生成如下目录
-user
+example/
 ├── api
-│   └── user.api.pb.proto
-│   └── user.api_grpc.pb.proto
-├── service
-│   └── user.service.go
-├── builder.gen.go
-├── model.gen.go
-├── user.api.proto
-└── where.gen.go
+│   ├── user.api_grpc.pb.go
+│   └── user.api.pb.go
+├── crud
+│   ├── aa_client.go
+│   ├── user
+│   │   ├── builder.go
+│   │   ├── model.go
+│   │   └── where.go
+│   └── user.sql
+├── proto
+│   └── user.api.proto
+└── service
+    └── user.service.go
 
 ```
-> 多了 api 和 service 目录，以及proto文件。
+> 多了 api、proto、service 目录。
 
 ### proto example 
 usr.api.proto
@@ -501,23 +533,19 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/hongshengjie/crud/internal/example/api"
+	"github.com/hongshengjie/crud/internal/example/crud"
+	"github.com/hongshengjie/crud/internal/example/crud/user"
 	"github.com/hongshengjie/crud/xsql"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"math"
 	"strings"
 	"time"
-
-	"github.com/hongshengjie/crud/example/user"
-	"github.com/hongshengjie/crud/example/user/api"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // UserServiceImpl UserServiceImpl
 type UserServiceImpl struct {
-	db xsql.ExecQuerier
-}
-
-func (s *UserServiceImpl) SetDB(db xsql.ExecQuerier) {
-	s.db = db
+	Client *crud.Client
 }
 
 // CreateUser CreateUser
@@ -535,16 +563,16 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 		Mtime: time.Now(),
 	}
 	var err error
-	_, err = user.
-		Create(s.db).
+	_, err = s.Client.User.
+		Create().
 		SetUser(a).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after create and return
-	a2, err := user.
-		Find(s.db).
+	a2, err := s.Client.Master.User.
+		Find().
 		Where(
 			user.IdEQ(a.Id),
 		).
@@ -557,8 +585,8 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 
 // DeleteUser DeleteUser
 func (s *UserServiceImpl) DeletesUser(ctx context.Context, req *api.UserId) (*emptypb.Empty, error) {
-	_, err := user.
-		Delete(s.db).
+	_, err := s.Client.User.
+		Delete().
 		Where(
 			user.IdEQ(req.GetId()),
 		).
@@ -575,7 +603,7 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 	if len(req.GetUpdateMask()) == 0 {
 		return nil, errors.New("update_mask empty")
 	}
-	update := user.Update(s.db)
+	update := s.Client.User.Update()
 	for _, v := range req.GetUpdateMask() {
 		switch v {
 		case "user.name":
@@ -605,8 +633,8 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 		return nil, err
 	}
 	// query after update and return
-	a, err := user.
-		Find(s.db).
+	a, err := s.Client.Master.User.
+		Find().
 		Where(
 			user.IdEQ(req.GetUser().GetId()),
 		).
@@ -619,8 +647,8 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 
 // GetUser GetUser
 func (s *UserServiceImpl) GetUser(ctx context.Context, req *api.UserId) (*api.User, error) {
-	a, err := user.
-		Find(s.db).
+	a, err := s.Client.User.
+		Find().
 		Where(
 			user.IdEQ(req.GetId()),
 		).
@@ -642,8 +670,8 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 	if offset < 0 {
 		offset = 0
 	}
-	finder := user.
-		Find(s.db).
+	finder := s.Client.User.
+		Find().
 		Offset(offset).
 		Limit(size)
 
@@ -655,8 +683,8 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 			finder.OrderDesc(odb)
 		}
 	}
-	counter := user.
-		Find(s.db).
+	counter := s.Client.User.
+		Find().
 		Count()
 
 	var ps []*xsql.Predicate

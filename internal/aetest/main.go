@@ -20,7 +20,7 @@ import (
 //go:generate protoc --go_out=. --go-grpc_out=.  user.api.proto
 //linux   protoc  -I . -I /usr/local/include --go_out=. --go-grpc_out=.  user.api.proto
 var db *sql.DB
-var dsn = "root:123456@tcp(127.0.0.1:3306)/test?parseTime=true"
+
 var ctx = context.Background()
 
 func InitDB() {
@@ -32,15 +32,19 @@ func InitDB() {
 
 }
 
-var uc *crud.Client
+var client *crud.Client
+
+var dsn = "root:123456@tcp(127.0.0.1:3306)/test?parseTime=true"
 
 func InitDB2() {
-	uc, _ = crud.NewClient(&xsql.Config{
-		DSN:         dsn,
-		ReadDSN:     []string{dsn},
-		Active:      10,
-		Idle:        10,
-		IdleTimeout: time.Hour,
+	client, _ = crud.NewClient(&xsql.Config{
+		DSN:          dsn,
+		ReadDSN:      []string{dsn},
+		Active:       10,
+		Idle:         10,
+		IdleTimeout:  time.Hour,
+		QueryTimeout: time.Second,
+		ExecTimeout:  time.Second,
 	})
 }
 
@@ -215,15 +219,15 @@ func main() {
 
 	e, err := user.Find(db).Timeout(time.Millisecond * 30).All(ctx)
 	fmt.Println(e, err)
-	uc.User.Find().Select().All(ctx)
+	client.User.Find().Select().All(ctx)
 
-	tx, _ := uc.Begin(ctx)
+	tx, _ := client.Begin(ctx)
 	tx.User.Update().SetAge(1).Save(ctx)
 	tx.Commit()
 }
 
 func ListUsers() {
-	s := service.UserServiceImpl{Client: uc}
+	s := service.UserServiceImpl{Client: client}
 
 	r, err := s.ListUsers(ctx, &api.ListUsersReq{
 		Page:     1,

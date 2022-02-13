@@ -36,7 +36,7 @@ func NewAllTypeTableServiceClient(cc grpc.ClientConnInterface) AllTypeTableServi
 
 func (c *allTypeTableServiceClient) CreateAllTypeTable(ctx context.Context, in *AllTypeTable, opts ...grpc.CallOption) (*AllTypeTable, error) {
 	out := new(AllTypeTable)
-	err := c.cc.Invoke(ctx, "/AllTypeTableService/CreateAllTypeTable", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/example.AllTypeTableService/CreateAllTypeTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (c *allTypeTableServiceClient) CreateAllTypeTable(ctx context.Context, in *
 
 func (c *allTypeTableServiceClient) DeleteAllTypeTable(ctx context.Context, in *AllTypeTableId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/AllTypeTableService/DeleteAllTypeTable", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/example.AllTypeTableService/DeleteAllTypeTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (c *allTypeTableServiceClient) DeleteAllTypeTable(ctx context.Context, in *
 
 func (c *allTypeTableServiceClient) UpdateAllTypeTable(ctx context.Context, in *UpdateAllTypeTableReq, opts ...grpc.CallOption) (*AllTypeTable, error) {
 	out := new(AllTypeTable)
-	err := c.cc.Invoke(ctx, "/AllTypeTableService/UpdateAllTypeTable", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/example.AllTypeTableService/UpdateAllTypeTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (c *allTypeTableServiceClient) UpdateAllTypeTable(ctx context.Context, in *
 
 func (c *allTypeTableServiceClient) GetAllTypeTable(ctx context.Context, in *AllTypeTableId, opts ...grpc.CallOption) (*AllTypeTable, error) {
 	out := new(AllTypeTable)
-	err := c.cc.Invoke(ctx, "/AllTypeTableService/GetAllTypeTable", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/example.AllTypeTableService/GetAllTypeTable", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (c *allTypeTableServiceClient) GetAllTypeTable(ctx context.Context, in *All
 
 func (c *allTypeTableServiceClient) ListAllTypeTables(ctx context.Context, in *ListAllTypeTablesReq, opts ...grpc.CallOption) (*ListAllTypeTablesResp, error) {
 	out := new(ListAllTypeTablesResp)
-	err := c.cc.Invoke(ctx, "/AllTypeTableService/ListAllTypeTables", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/example.AllTypeTableService/ListAllTypeTables", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func _AllTypeTableService_CreateAllTypeTable_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/AllTypeTableService/CreateAllTypeTable",
+		FullMethod: "/example.AllTypeTableService/CreateAllTypeTable",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AllTypeTableServiceServer).CreateAllTypeTable(ctx, req.(*AllTypeTable))
@@ -151,7 +151,7 @@ func _AllTypeTableService_DeleteAllTypeTable_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/AllTypeTableService/DeleteAllTypeTable",
+		FullMethod: "/example.AllTypeTableService/DeleteAllTypeTable",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AllTypeTableServiceServer).DeleteAllTypeTable(ctx, req.(*AllTypeTableId))
@@ -169,7 +169,7 @@ func _AllTypeTableService_UpdateAllTypeTable_Handler(srv interface{}, ctx contex
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/AllTypeTableService/UpdateAllTypeTable",
+		FullMethod: "/example.AllTypeTableService/UpdateAllTypeTable",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AllTypeTableServiceServer).UpdateAllTypeTable(ctx, req.(*UpdateAllTypeTableReq))
@@ -187,7 +187,7 @@ func _AllTypeTableService_GetAllTypeTable_Handler(srv interface{}, ctx context.C
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/AllTypeTableService/GetAllTypeTable",
+		FullMethod: "/example.AllTypeTableService/GetAllTypeTable",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AllTypeTableServiceServer).GetAllTypeTable(ctx, req.(*AllTypeTableId))
@@ -205,7 +205,7 @@ func _AllTypeTableService_ListAllTypeTables_Handler(srv interface{}, ctx context
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/AllTypeTableService/ListAllTypeTables",
+		FullMethod: "/example.AllTypeTableService/ListAllTypeTables",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AllTypeTableServiceServer).ListAllTypeTables(ctx, req.(*ListAllTypeTablesReq))
@@ -217,7 +217,7 @@ func _AllTypeTableService_ListAllTypeTables_Handler(srv interface{}, ctx context
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var AllTypeTableService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "AllTypeTableService",
+	ServiceName: "example.AllTypeTableService",
 	HandlerType: (*AllTypeTableServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
