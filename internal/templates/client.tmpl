@@ -8,7 +8,7 @@ import (
 	"github.com/hongshengjie/crud/xsql"
 
 	{{- range $index,$table := . }}
-   	"{{$table.RelativePath}}/{{$table.PackageName}}"
+   	"{{$table.RelativePath}}/crud/{{$table.PackageName}}"
 	{{- end}}  
 
 )
@@ -16,6 +16,13 @@ import (
 type Client struct {
 	config *xsql.Config
 	db     *xsql.DB
+	Master *ClientM
+	{{- range $index,$table := . }}
+   	{{$table.GoTableName}} *{{$table.GoTableName}}Client
+	{{- end}} 
+}
+
+type ClientM struct{
 	{{- range $index,$table := . }}
    	{{$table.GoTableName}} *{{$table.GoTableName}}Client
 	{{- end}} 
@@ -25,6 +32,12 @@ func (c *Client) init() {
 	{{- range $index,$table := . }}
    	c.{{$table.GoTableName}} =  &{{$table.GoTableName}}Client{eq: c.db, config: c.config}
 	{{- end}} 
+	c.Master = &ClientM{
+	{{- range $index,$table := . }}
+   		{{$table.GoTableName}}:  &{{$table.GoTableName}}Client{eq: c.db.Master(), config: c.config},
+	{{- end}} 	
+
+	}
 }
 
 type Tx struct {

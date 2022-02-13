@@ -7,6 +7,16 @@ import (
 	"time"
 )
 
+type ExecQuerier interface {
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+}
+type DBI interface {
+	ExecQuerier
+	Begin() (*sql.Tx, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}
+
 type Config struct {
 	DSN          string        // write data source name.
 	ReadDSN      []string      // read data source name.
@@ -67,19 +77,6 @@ func (db *DB) Master() *sql.DB {
 func (db *DB) slave() *sql.DB {
 	v := atomic.AddInt64(&db.idx, 1)
 	return db.slaves[int(v)%len(db.slaves)]
-}
-
-func Shrink(ctx context.Context, duration time.Duration) (time.Duration, context.Context, context.CancelFunc) {
-	if duration == 0 {
-		return 0, ctx, func() {}
-	}
-	if deadline, ok := ctx.Deadline(); ok {
-		if left := time.Until(deadline); left < duration {
-			return left, ctx, func() {}
-		}
-	}
-	ctx, cancel := context.WithTimeout(ctx, duration)
-	return duration, ctx, cancel
 }
 
 func (db *DB) PingContext(ctx context.Context) error {

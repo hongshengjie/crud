@@ -973,74 +973,6 @@ type Selector struct {
 	index    *IndexOptions
 }
 
-type IndexOptions struct {
-	action    IndexAction
-	forWhat   ForWhat
-	indexName []string
-}
-
-type ForWhat string
-type IndexAction string
-
-const (
-	ForGroupBy ForWhat = "FOR GROUP BY"
-	ForOrderBy ForWhat = "FOR ORDER BY"
-	ForJoin    ForWhat = "FOR JOIN"
-	ForDefault ForWhat = ""
-
-	USE    IndexAction = "USE INDEX"
-	IGNORE IndexAction = "IGNORE INDEX"
-	FORCE  IndexAction = "FORCE INDEX"
-)
-
-// UseIndex  generate  USE INDEX (`indexName`)
-func (s *Selector) UseIndex(indexName ...string) *Selector {
-	s.UseIndexFor(ForDefault, indexName...)
-	return s
-}
-
-// ForceIndex generate FORCE INDEX (`indexName`)
-func (s *Selector) ForceIndex(indexName ...string) *Selector {
-	s.ForceIndexFor(ForDefault, indexName...)
-	return s
-}
-
-// IgnoreIndex generate IGNORE INDEX (`indexName`)
-func (s *Selector) IgnoreIndex(indexName ...string) *Selector {
-	s.IgnoreIndexFor(ForDefault, indexName...)
-	return s
-}
-
-// UseIndexFor generate USE INDEX FOR xxx (`indexName`)
-func (s *Selector) UseIndexFor(forwhat ForWhat, indexName ...string) *Selector {
-	s.index = &IndexOptions{
-		action:    USE,
-		forWhat:   forwhat,
-		indexName: indexName,
-	}
-	return s
-}
-
-// ForceIndexFor generate FORCE INDEX FOR xxx (`indexName`)
-func (s *Selector) ForceIndexFor(forwhat ForWhat, indexName ...string) *Selector {
-	s.index = &IndexOptions{
-		action:    FORCE,
-		forWhat:   forwhat,
-		indexName: indexName,
-	}
-	return s
-}
-
-// IgnoreIndexFor generate IGNORE INDEX FOR xxx (`indexName`)
-func (s *Selector) IgnoreIndexFor(forwhat ForWhat, indexName ...string) *Selector {
-	s.index = &IndexOptions{
-		action:    IGNORE,
-		forWhat:   forwhat,
-		indexName: indexName,
-	}
-	return s
-}
-
 // WithContext sets the context into the *Selector.
 func (s *Selector) WithContext(ctx context.Context) *Selector {
 	if ctx == nil {
@@ -1266,6 +1198,74 @@ func (s *Selector) Count(columns ...string) *Selector {
 		column = b.String()
 	}
 	s.columns = []string{Count(column)}
+	return s
+}
+
+type IndexOptions struct {
+	action    IndexAction
+	forWhat   ForWhat
+	indexName []string
+}
+
+type ForWhat string
+type IndexAction string
+
+const (
+	ForGroupBy ForWhat = "FOR GROUP BY"
+	ForOrderBy ForWhat = "FOR ORDER BY"
+	ForJoin    ForWhat = "FOR JOIN"
+	ForDefault ForWhat = ""
+
+	USE    IndexAction = "USE INDEX"
+	IGNORE IndexAction = "IGNORE INDEX"
+	FORCE  IndexAction = "FORCE INDEX"
+)
+
+// UseIndex  generate  USE INDEX (`indexName`)
+func (s *Selector) UseIndex(indexName ...string) *Selector {
+	s.UseIndexFor(ForDefault, indexName...)
+	return s
+}
+
+// ForceIndex generate FORCE INDEX (`indexName`)
+func (s *Selector) ForceIndex(indexName ...string) *Selector {
+	s.ForceIndexFor(ForDefault, indexName...)
+	return s
+}
+
+// IgnoreIndex generate IGNORE INDEX (`indexName`)
+func (s *Selector) IgnoreIndex(indexName ...string) *Selector {
+	s.IgnoreIndexFor(ForDefault, indexName...)
+	return s
+}
+
+// UseIndexFor generate USE INDEX FOR xxx (`indexName`)
+func (s *Selector) UseIndexFor(forwhat ForWhat, indexName ...string) *Selector {
+	s.index = &IndexOptions{
+		action:    USE,
+		forWhat:   forwhat,
+		indexName: indexName,
+	}
+	return s
+}
+
+// ForceIndexFor generate FORCE INDEX FOR xxx (`indexName`)
+func (s *Selector) ForceIndexFor(forwhat ForWhat, indexName ...string) *Selector {
+	s.index = &IndexOptions{
+		action:    FORCE,
+		forWhat:   forwhat,
+		indexName: indexName,
+	}
+	return s
+}
+
+// IgnoreIndexFor generate IGNORE INDEX FOR xxx (`indexName`)
+func (s *Selector) IgnoreIndexFor(forwhat ForWhat, indexName ...string) *Selector {
+	s.index = &IndexOptions{
+		action:    IGNORE,
+		forWhat:   forwhat,
+		indexName: indexName,
+	}
 	return s
 }
 

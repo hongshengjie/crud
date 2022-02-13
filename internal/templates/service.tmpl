@@ -7,9 +7,9 @@ import (
 	"strings"
 	{{if .ImportTime}}"time"{{end}}
 	"github.com/hongshengjie/crud/xsql"
-	
-	"{{.RelativePath}}/{{.PackageName}}"
-	"{{.RelativePath}}/{{.PackageName}}/api"
+	"{{.RelativePath}}/crud"
+	"{{.RelativePath}}/crud/{{.PackageName}}"
+	"{{.RelativePath}}/api"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 )
@@ -18,11 +18,7 @@ import (
 
 // {{.GoTableName}}ServiceImpl {{.GoTableName}}ServiceImpl
 type {{.GoTableName}}ServiceImpl struct {
-	db xsql.ExecQuerier
-}
-
-func (s *{{.GoTableName}}ServiceImpl) SetDB(db xsql.ExecQuerier) {
-	s.db = db
+	Client *crud.Client
 }
 
 // Create{{.GoTableName}} Create{{.GoTableName}}
@@ -63,16 +59,16 @@ func (s *{{.GoTableName}}ServiceImpl) CreateUser(ctx context.Context, req *api.{
 				{{- end}}
 			{{- end}}  
 	{{- end}}  
-	_, err = {{.PackageName}}.
-		Create(s.db).
+	_, err = s.Client.{{.GoTableName}}.
+		Create().
 		Set{{.GoTableName}}(a).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after create and return
-	a2, err := {{.PackageName}}.
-		Find(s.db).
+	a2, err := s.Client.Master.{{.GoTableName}}.
+		Find().
 		Where(
 			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(a.{{.PrimaryKey.GoColumnName}}),
 		).
@@ -85,8 +81,8 @@ func (s *{{.GoTableName}}ServiceImpl) CreateUser(ctx context.Context, req *api.{
 
 // Delete{{.GoTableName}} Delete{{.GoTableName}}
 func (s *{{.GoTableName}}ServiceImpl) Deletes{{.GoTableName}}(ctx context.Context, req *api.{{.GoTableName}}{{.PrimaryKey.GoColumnName}}) (*emptypb.Empty, error) {
-	_, err := {{.PackageName}}.
-		Delete(s.db).
+	_, err := s.Client.{{.GoTableName}}.
+		Delete().
 		Where(
 			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.PrimaryKey.GoColumnName}}()),
 		).
@@ -103,7 +99,7 @@ func (s *{{.GoTableName}}ServiceImpl) Update{{.GoTableName}}(ctx context.Context
 	if len(req.GetUpdateMask()) == 0 {
 		return nil, errors.New("update_mask empty")
 	}
-	update := {{.PackageName}}.Update(s.db)
+	update := s.Client.{{.GoTableName}}.Update()
 	for _, v := range req.GetUpdateMask() {
 		switch v {	
 		{{- range $index,$field := .Fields }}
@@ -141,8 +137,8 @@ func (s *{{.GoTableName}}ServiceImpl) Update{{.GoTableName}}(ctx context.Context
 		return nil, err
 	}
 	// query after update and return
-	a, err := {{.PackageName}}.
-		Find(s.db).
+	a, err := s.Client.Master.{{.GoTableName}}.
+		Find().
 		Where(
 			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.GoTableName}}().Get{{.PrimaryKey.GoColumnName}}()),
 		).
@@ -155,8 +151,8 @@ func (s *{{.GoTableName}}ServiceImpl) Update{{.GoTableName}}(ctx context.Context
 
 // Get{{.GoTableName}} Get{{.GoTableName}}
 func (s *{{.GoTableName}}ServiceImpl) Get{{.GoTableName}}(ctx context.Context, req *api.{{.GoTableName}}{{.PrimaryKey.GoColumnName}}) (*api.{{.GoTableName}}, error) {
-	a, err := {{.PackageName}}.
-		Find(s.db).
+	a, err := s.Client.{{.GoTableName}}.
+		Find().
 		Where(
 			{{.PackageName}}.{{.PrimaryKey.GoColumnName}}EQ(req.Get{{.PrimaryKey.GoColumnName}}()),
 		).
@@ -178,8 +174,8 @@ func (s *{{.GoTableName}}ServiceImpl) List{{.GoTableName}}s(ctx context.Context,
 	if offset < 0 {
 		offset = 0
 	}
-	finder := {{.PackageName}}.
-		Find(s.db).
+	finder := s.Client.{{.GoTableName}}.
+		Find().
 		Offset(offset).
 		Limit(size)
 
@@ -191,8 +187,8 @@ func (s *{{.GoTableName}}ServiceImpl) List{{.GoTableName}}s(ctx context.Context,
 			finder.OrderDesc(odb)
 		}
 	}
-	counter := {{.PackageName}}.
-		Find(s.db).
+	counter := s.Client.{{.GoTableName}}.
+		Find().
 		Count()
 
 	var ps []*xsql.Predicate

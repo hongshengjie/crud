@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"time"
 
-	crud "github.com/hongshengjie/crud/internal/example"
-	"github.com/hongshengjie/crud/internal/example/user"
-	"github.com/hongshengjie/crud/internal/example/user/api"
-	"github.com/hongshengjie/crud/internal/example/user/service"
+	"github.com/hongshengjie/crud/internal/example/api"
+	"github.com/hongshengjie/crud/internal/example/crud"
+	"github.com/hongshengjie/crud/internal/example/crud/user"
+	"github.com/hongshengjie/crud/internal/example/service"
 	"github.com/hongshengjie/crud/xsql"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -223,8 +223,8 @@ func main() {
 }
 
 func ListUsers() {
-	s := service.UserServiceImpl{}
-	s.SetDB(db)
+	s := service.UserServiceImpl{Client: uc}
+
 	r, err := s.ListUsers(ctx, &api.ListUsersReq{
 		Page:     1,
 		PageSize: 20,

@@ -3,23 +3,19 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/hongshengjie/crud/internal/example/api"
+	"github.com/hongshengjie/crud/internal/example/crud"
+	"github.com/hongshengjie/crud/internal/example/crud/alltypetable"
 	"github.com/hongshengjie/crud/xsql"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"math"
 	"strings"
 	"time"
-
-	"github.com/hongshengjie/crud/internal/example/alltypetable"
-	"github.com/hongshengjie/crud/internal/example/alltypetable/api"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // AllTypeTableServiceImpl AllTypeTableServiceImpl
 type AllTypeTableServiceImpl struct {
-	db xsql.ExecQuerier
-}
-
-func (s *AllTypeTableServiceImpl) SetDB(db xsql.ExecQuerier) {
-	s.db = db
+	Client *crud.Client
 }
 
 // CreateAllTypeTable CreateAllTypeTable
@@ -68,16 +64,16 @@ func (s *AllTypeTableServiceImpl) CreateUser(ctx context.Context, req *api.AllTy
 	if a.DataTimeM, err = time.ParseInLocation("2006-01-02 15:04:05", req.GetDataTimeM(), time.Local); err != nil {
 		return nil, err
 	}
-	_, err = alltypetable.
-		Create(s.db).
+	_, err = s.Client.AllTypeTable.
+		Create().
 		SetAllTypeTable(a).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after create and return
-	a2, err := alltypetable.
-		Find(s.db).
+	a2, err := s.Client.Master.AllTypeTable.
+		Find().
 		Where(
 			alltypetable.IdEQ(a.Id),
 		).
@@ -90,8 +86,8 @@ func (s *AllTypeTableServiceImpl) CreateUser(ctx context.Context, req *api.AllTy
 
 // DeleteAllTypeTable DeleteAllTypeTable
 func (s *AllTypeTableServiceImpl) DeletesAllTypeTable(ctx context.Context, req *api.AllTypeTableId) (*emptypb.Empty, error) {
-	_, err := alltypetable.
-		Delete(s.db).
+	_, err := s.Client.AllTypeTable.
+		Delete().
 		Where(
 			alltypetable.IdEQ(req.GetId()),
 		).
@@ -108,7 +104,7 @@ func (s *AllTypeTableServiceImpl) UpdateAllTypeTable(ctx context.Context, req *a
 	if len(req.GetUpdateMask()) == 0 {
 		return nil, errors.New("update_mask empty")
 	}
-	update := alltypetable.Update(s.db)
+	update := s.Client.AllTypeTable.Update()
 	for _, v := range req.GetUpdateMask() {
 		switch v {
 		case "alltypetable.t_int":
@@ -200,8 +196,8 @@ func (s *AllTypeTableServiceImpl) UpdateAllTypeTable(ctx context.Context, req *a
 		return nil, err
 	}
 	// query after update and return
-	a, err := alltypetable.
-		Find(s.db).
+	a, err := s.Client.Master.AllTypeTable.
+		Find().
 		Where(
 			alltypetable.IdEQ(req.GetAllTypeTable().GetId()),
 		).
@@ -214,8 +210,8 @@ func (s *AllTypeTableServiceImpl) UpdateAllTypeTable(ctx context.Context, req *a
 
 // GetAllTypeTable GetAllTypeTable
 func (s *AllTypeTableServiceImpl) GetAllTypeTable(ctx context.Context, req *api.AllTypeTableId) (*api.AllTypeTable, error) {
-	a, err := alltypetable.
-		Find(s.db).
+	a, err := s.Client.AllTypeTable.
+		Find().
 		Where(
 			alltypetable.IdEQ(req.GetId()),
 		).
@@ -237,8 +233,8 @@ func (s *AllTypeTableServiceImpl) ListAllTypeTables(ctx context.Context, req *ap
 	if offset < 0 {
 		offset = 0
 	}
-	finder := alltypetable.
-		Find(s.db).
+	finder := s.Client.AllTypeTable.
+		Find().
 		Offset(offset).
 		Limit(size)
 
@@ -250,8 +246,8 @@ func (s *AllTypeTableServiceImpl) ListAllTypeTables(ctx context.Context, req *ap
 			finder.OrderDesc(odb)
 		}
 	}
-	counter := alltypetable.
-		Find(s.db).
+	counter := s.Client.AllTypeTable.
+		Find().
 		Count()
 
 	var ps []*xsql.Predicate

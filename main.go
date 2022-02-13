@@ -43,6 +43,7 @@ var service bool
 var protopkg string
 
 //var fields string
+const defaultDir = "crud"
 
 func init() {
 	flag.StringVar(&path, "path", "", ".sql file path or folder")
@@ -53,26 +54,51 @@ func init() {
 func main() {
 
 	flag.Parse()
-	var tableObjs []*model.Table
 
-	tableObjs = append(tableObjs, tableFromSql(path)...)
+	if len(os.Args) == 1 {
+		info, err := os.Stat(defaultDir)
+		if err != nil {
+			if os.IsNotExist(err) {
+				log.Fatal("crud dir is not exist please exec: crud init")
+				return
+			}
+			log.Fatal(err)
+			return
+		}
+		if info.IsDir() {
+			path = defaultDir
+		}
+	}
+	// subcommand
+	if len(os.Args) == 2 {
+		switch os.Args[1] {
+		case "init":
+			//create crud dir
+			if err := os.Mkdir(defaultDir, os.ModePerm); err != nil {
+				log.Fatal(err)
+			}
+			return
+		}
+	}
 
+	tableObjs, isDir := tableFromSql(path)
 	for _, v := range tableObjs {
 		generateFiles(v)
 	}
-	if len(tableObjs) > 1 {
-		generateFile("client.go", string(clientTmpl), f, tableObjs)
+	if isDir && path == defaultDir {
+		generateFile(filepath.Join(defaultDir, "aa_client.go"), string(clientTmpl), f, tableObjs)
 	}
 
 }
 
-func tableFromSql(path string) (tableObjs []*model.Table) {
+func tableFromSql(path string) (tableObjs []*model.Table, isDir bool) {
 	relativePath := model.GetRelativePath()
 	info, err := os.Stat(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if info.IsDir() {
+		isDir = true
 		fs, err := ioutil.ReadDir(path)
 		if err != nil {
 			log.Fatal(err)
@@ -90,7 +116,7 @@ func tableFromSql(path string) (tableObjs []*model.Table) {
 	} else {
 		tableObjs = append(tableObjs, model.MysqlTable(database, path, relativePath))
 	}
-	return tableObjs
+	return tableObjs, isDir
 }
 
 var f = template.FuncMap{
@@ -101,28 +127,34 @@ var f = template.FuncMap{
 
 func generateFiles(tableObj *model.Table) {
 
-	pkgName := tableObj.PackageName
 	//创建目录
-	os.Mkdir(tableObj.PackageName, os.ModePerm)
-	generateFile(filepath.Join(pkgName, "model.go"), string(modelTmpl), f, tableObj)
-	generateFile(filepath.Join(pkgName, "where.go"), string(whereTmpl), f, tableObj)
-	generateFile(filepath.Join(pkgName, "builder.go"), string(crudTmpl), f, tableObj)
+	dir := filepath.Join(defaultDir, tableObj.PackageName)
+	os.Mkdir(dir, os.ModePerm)
+	generateFile(filepath.Join(dir, "model.go"), string(modelTmpl), f, tableObj)
+	generateFile(filepath.Join(dir, "where.go"), string(whereTmpl), f, tableObj)
+	generateFile(filepath.Join(dir, "builder.go"), string(crudTmpl), f, tableObj)
 	if service {
-		tableObj.Protopkg = protopkg
-		os.Mkdir(filepath.Join(tableObj.PackageName, "api"), os.ModePerm)
-		generateFile(filepath.Join(pkgName, pkgName+".api.proto"), string(protoTmpl), f, tableObj)
-		//protoc --go_out=. --go-grpc_out=.  user.api.proto
-		cmd := exec.Command("protoc", "-I.", "-I/usr/local/include", "--go_out=.", "--go-grpc_out=.", pkgName+".api.proto")
-		cmd.Dir = filepath.Join(model.GetCurrentPath(), pkgName)
-		log.Println(cmd.Dir, "exec:", cmd.String())
-		s, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Println(string(s), err)
-		}
-		os.Mkdir(filepath.Join(pkgName, "service"), os.ModePerm)
-		generateFile(filepath.Join(pkgName, "service", pkgName+".service.go"), string(serviceTmpl), f, tableObj)
+		generateService(tableObj)
 	}
 
+}
+func generateService(tableObj *model.Table) {
+	pkgName := tableObj.PackageName
+	tableObj.Protopkg = protopkg
+	os.Mkdir(filepath.Join("proto"), os.ModePerm)
+	os.Mkdir(filepath.Join("service"), os.ModePerm)
+
+	generateFile(filepath.Join("proto", pkgName+".api.proto"), string(protoTmpl), f, tableObj)
+	//protoc --go_out=. --go-grpc_out=.  user.api.proto
+	cmd := exec.Command("protoc", "-I.", "-I/usr/local/include", "--go_out=.", "--go-grpc_out=.", filepath.Join("proto", pkgName+".api.proto"))
+	cmd.Dir = filepath.Join(model.GetCurrentPath())
+	log.Println(cmd.Dir, "exec:", cmd.String())
+	s, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Println(string(s), err)
+	}
+
+	generateFile(filepath.Join("service", pkgName+".service.go"), string(serviceTmpl), f, tableObj)
 }
 
 func generateFile(filename, tmpl string, f template.FuncMap, data interface{}) {
@@ -143,7 +175,7 @@ func generateFile(filename, tmpl string, f template.FuncMap, data interface{}) {
 			log.Fatal(err)
 		}
 	}
-	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0766)
+	file, err := os.Create(filename)
 	if err != nil {
 		log.Fatalln(err)
 	}

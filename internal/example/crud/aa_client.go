@@ -4,14 +4,20 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/hongshengjie/crud/internal/example/alltypetable"
-	"github.com/hongshengjie/crud/internal/example/user"
+	"github.com/hongshengjie/crud/internal/example/crud/alltypetable"
+	"github.com/hongshengjie/crud/internal/example/crud/user"
 	"github.com/hongshengjie/crud/xsql"
 )
 
 type Client struct {
 	config       *xsql.Config
 	db           *xsql.DB
+	Master       *ClientM
+	AllTypeTable *AllTypeTableClient
+	User         *UserClient
+}
+
+type ClientM struct {
 	AllTypeTable *AllTypeTableClient
 	User         *UserClient
 }
@@ -19,6 +25,10 @@ type Client struct {
 func (c *Client) init() {
 	c.AllTypeTable = &AllTypeTableClient{eq: c.db, config: c.config}
 	c.User = &UserClient{eq: c.db, config: c.config}
+	c.Master = &ClientM{
+		AllTypeTable: &AllTypeTableClient{eq: c.db.Master(), config: c.config},
+		User:         &UserClient{eq: c.db.Master(), config: c.config},
+	}
 }
 
 type Tx struct {

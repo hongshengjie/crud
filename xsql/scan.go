@@ -9,10 +9,6 @@ import (
 	"strings"
 )
 
-type ExecQuerier interface {
-	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
-}
 type ColumnScanner interface {
 	Close() error
 	ColumnTypes() ([]*sql.ColumnType, error)

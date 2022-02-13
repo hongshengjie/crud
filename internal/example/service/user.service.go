@@ -3,23 +3,19 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/hongshengjie/crud/internal/example/api"
+	"github.com/hongshengjie/crud/internal/example/crud"
+	"github.com/hongshengjie/crud/internal/example/crud/user"
 	"github.com/hongshengjie/crud/xsql"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"math"
 	"strings"
 	"time"
-
-	"github.com/hongshengjie/crud/internal/example/user"
-	"github.com/hongshengjie/crud/internal/example/user/api"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // UserServiceImpl UserServiceImpl
 type UserServiceImpl struct {
-	db xsql.ExecQuerier
-}
-
-func (s *UserServiceImpl) SetDB(db xsql.ExecQuerier) {
-	s.db = db
+	Client *crud.Client
 }
 
 // CreateUser CreateUser
@@ -37,16 +33,16 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 		Mtime: time.Now(),
 	}
 	var err error
-	_, err = user.
-		Create(s.db).
+	_, err = s.Client.User.
+		Create().
 		SetUser(a).
 		Save(ctx)
 	if err != nil {
 		return nil, err
 	}
 	// query after create and return
-	a2, err := user.
-		Find(s.db).
+	a2, err := s.Client.Master.User.
+		Find().
 		Where(
 			user.IdEQ(a.Id),
 		).
@@ -59,8 +55,8 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 
 // DeleteUser DeleteUser
 func (s *UserServiceImpl) DeletesUser(ctx context.Context, req *api.UserId) (*emptypb.Empty, error) {
-	_, err := user.
-		Delete(s.db).
+	_, err := s.Client.User.
+		Delete().
 		Where(
 			user.IdEQ(req.GetId()),
 		).
@@ -77,7 +73,7 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 	if len(req.GetUpdateMask()) == 0 {
 		return nil, errors.New("update_mask empty")
 	}
-	update := user.Update(s.db)
+	update := s.Client.User.Update()
 	for _, v := range req.GetUpdateMask() {
 		switch v {
 		case "user.name":
@@ -107,8 +103,8 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 		return nil, err
 	}
 	// query after update and return
-	a, err := user.
-		Find(s.db).
+	a, err := s.Client.Master.User.
+		Find().
 		Where(
 			user.IdEQ(req.GetUser().GetId()),
 		).
@@ -121,8 +117,8 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *api.UpdateUserReq
 
 // GetUser GetUser
 func (s *UserServiceImpl) GetUser(ctx context.Context, req *api.UserId) (*api.User, error) {
-	a, err := user.
-		Find(s.db).
+	a, err := s.Client.User.
+		Find().
 		Where(
 			user.IdEQ(req.GetId()),
 		).
@@ -144,8 +140,8 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 	if offset < 0 {
 		offset = 0
 	}
-	finder := user.
-		Find(s.db).
+	finder := s.Client.User.
+		Find().
 		Offset(offset).
 		Limit(size)
 
@@ -157,8 +153,8 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 			finder.OrderDesc(odb)
 		}
 	}
-	counter := user.
-		Find(s.db).
+	counter := s.Client.User.
+		Find().
 		Count()
 
 	var ps []*xsql.Predicate
