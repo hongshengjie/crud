@@ -54,7 +54,7 @@ func (s *UserServiceImpl) CreateUser(ctx context.Context, req *api.User) (*api.U
 }
 
 // DeleteUser DeleteUser
-func (s *UserServiceImpl) DeletesUser(ctx context.Context, req *api.UserId) (*emptypb.Empty, error) {
+func (s *UserServiceImpl) DeleteUser(ctx context.Context, req *api.UserId) (*emptypb.Empty, error) {
 	_, err := s.Client.User.
 		Delete().
 		Where(

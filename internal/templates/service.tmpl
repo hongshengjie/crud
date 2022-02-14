@@ -22,7 +22,7 @@ type {{.GoTableName}}ServiceImpl struct {
 }
 
 // Create{{.GoTableName}} Create{{.GoTableName}}
-func (s *{{.GoTableName}}ServiceImpl) CreateUser(ctx context.Context, req *api.{{.GoTableName}}) (*api.{{.GoTableName}}, error) {
+func (s *{{.GoTableName}}ServiceImpl) Create{{.GoTableName}}(ctx context.Context, req *api.{{.GoTableName}}) (*api.{{.GoTableName}}, error) {
 	
 	// do some parameter check
 	// if req.GetXXXX() != 0 {
@@ -80,7 +80,7 @@ func (s *{{.GoTableName}}ServiceImpl) CreateUser(ctx context.Context, req *api.{
 }
 
 // Delete{{.GoTableName}} Delete{{.GoTableName}}
-func (s *{{.GoTableName}}ServiceImpl) Deletes{{.GoTableName}}(ctx context.Context, req *api.{{.GoTableName}}{{.PrimaryKey.GoColumnName}}) (*emptypb.Empty, error) {
+func (s *{{.GoTableName}}ServiceImpl) Delete{{.GoTableName}}(ctx context.Context, req *api.{{.GoTableName}}{{.PrimaryKey.GoColumnName}}) (*emptypb.Empty, error) {
 	_, err := s.Client.{{.GoTableName}}.
 		Delete().
 		Where(

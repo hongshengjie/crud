@@ -19,7 +19,7 @@ type AllTypeTableServiceImpl struct {
 }
 
 // CreateAllTypeTable CreateAllTypeTable
-func (s *AllTypeTableServiceImpl) CreateUser(ctx context.Context, req *api.AllTypeTable) (*api.AllTypeTable, error) {
+func (s *AllTypeTableServiceImpl) CreateAllTypeTable(ctx context.Context, req *api.AllTypeTable) (*api.AllTypeTable, error) {
 
 	// do some parameter check
 	// if req.GetXXXX() != 0 {
@@ -85,7 +85,7 @@ func (s *AllTypeTableServiceImpl) CreateUser(ctx context.Context, req *api.AllTy
 }
 
 // DeleteAllTypeTable DeleteAllTypeTable
-func (s *AllTypeTableServiceImpl) DeletesAllTypeTable(ctx context.Context, req *api.AllTypeTableId) (*emptypb.Empty, error) {
+func (s *AllTypeTableServiceImpl) DeleteAllTypeTable(ctx context.Context, req *api.AllTypeTableId) (*emptypb.Empty, error) {
 	_, err := s.Client.AllTypeTable.
 		Delete().
 		Where(
