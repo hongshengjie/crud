@@ -2,11 +2,11 @@
 # crud is a mysql crud code generate tool
 
 ## [中文文档](README_zh.md)
-## Getting Started 
 
-### Overview
 
-Crud is a very easy to learn and easy to use semi ORM framework. Using crud can enable you to complete business requirements quickly, gracefully and with high performance. Currently, MariaDB and MySQL are supported.
+## Overview
+
+Crud is a very easy to learn and easy to use ORM framework. Using crud can enable you to complete business requirements quickly, gracefully and with high performance. Currently, MariaDB and MySQL are supported.
 
 
 - From SQL DDL table structure design to corresponding model and service generation, it conforms to the process of creating tables before writing code
@@ -32,6 +32,9 @@ Crud is a very easy to learn and easy to use semi ORM framework. Using crud can 
 - Server code standardization
 
 - Support the generation of proto files and service semi implementation codes containing grpc interface definitions according to SQL DDL table structure definition files
+
+
+## Getting Started 
 
 ### install
 
@@ -74,7 +77,7 @@ db, _ = sql.Open("mysql","user:pwd@tcp(127.0.0.1:3306)/example?timeout=1s&readTi
 
 ```
 
-### Or the client wrapped in curd has read-write separation and context read-write timeout configuration
+### Or the client wrapped in curd has read-write separation and context read-write timeout configuration ability
 
 ```go
 

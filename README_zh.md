@@ -1,11 +1,11 @@
 
 # crud is a mysql crud code generate tool
 
-## 开始
 
-### 概览
 
-crud 是一个非常易学好用的半ORM框架，使用crud可以让你快速，优雅，且高性能的实现业务需求。目前支持mariadb、mysql。
+## 概览
+
+crud 是一个非常易学好用的ORM框架，使用crud可以让你快速，优雅，且高性能的实现业务需求。目前支持mariadb、mysql。
 
 - 从SQL DDL表结构设计到对应的Model，Service生成，符合先建表再写代码的流程
 - 支持事务,row-level locking 、FOR UPDATE 、LOCK IN SHARE MODE
@@ -20,6 +20,8 @@ crud 是一个非常易学好用的半ORM框架，使用crud可以让你快速�
 - 服务端代码标准化
 - 表结构变更可以记录在仓库中
 - 支持根据SQL DDL表结构定义文件生成包含GRPC接口定义的proto文件 和 Service半实现代码
+
+## 开始
 
 ### 安装
 
@@ -60,7 +62,7 @@ db, _ = sql.Open("mysql","user:pwd@tcp(127.0.0.1:3306)/example?timeout=1s&readTi
 
 ```
 
-### 或者使用curd包装的client, 拥有读写分离，Context读写超时配置
+### 或者使用curd包装的client, 拥有读写分离，Context读写超时配置功能
 ```go
 var client *crud.Client
 
