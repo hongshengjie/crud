@@ -234,10 +234,8 @@ func GoModFilePath() string {
 	gomodPath := []string{}
 	names := strings.Split(exPath, "/")
 	for k := range names {
-		if k > 0 {
-			prefix := "/" + filepath.Join(names[:k]...)
-			gomodPath = append(gomodPath, filepath.Join(prefix, "go.mod"))
-		}
+		prefix := "/" + filepath.Join(names[:k+1]...)
+		gomodPath = append(gomodPath, filepath.Join(prefix, "go.mod"))
 
 	}
 	for i := len(gomodPath)/2 - 1; i >= 0; i-- {
