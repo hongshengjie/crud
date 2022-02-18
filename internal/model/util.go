@@ -225,19 +225,27 @@ func GetModuleName() (string, string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	p, _ := filepath.Split(mod)
 	// module name and project root path
-	return modfile.ModulePath(f), strings.TrimSuffix(mod, "/go.mod")
+	return modfile.ModulePath(f), filepath.Clean(p)
 }
 
 func GoModFilePath() string {
 	exPath := GetCurrentPath()
 	gomodPath := []string{}
-	names := strings.Split(exPath, "/")
+	names := strings.Split(exPath, string(os.PathSeparator))
+
 	for k := range names {
-		prefix := "/" + filepath.Join(names[:k+1]...)
+		if k == 0 {
+			if strings.HasSuffix(names[0], ":") {
+				names[0] = names[0] + string(os.PathSeparator)
+			}
+		}
+		prefix := filepath.Join(names[:k+1]...)
 		gomodPath = append(gomodPath, filepath.Join(prefix, "go.mod"))
 
 	}
+
 	for i := len(gomodPath)/2 - 1; i >= 0; i-- {
 		opp := len(gomodPath) - 1 - i
 		gomodPath[i], gomodPath[opp] = gomodPath[opp], gomodPath[i]
