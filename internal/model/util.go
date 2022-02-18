@@ -239,6 +239,8 @@ func GoModFilePath() string {
 		if k == 0 {
 			if strings.HasSuffix(names[0], ":") {
 				names[0] = names[0] + string(os.PathSeparator)
+			} else {
+				names[0] = string(os.PathSeparator) + names[0]
 			}
 		}
 		prefix := filepath.Join(names[:k+1]...)
