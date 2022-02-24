@@ -4,6 +4,7 @@
 - [x] (Master and Slave)
 - [ ] (Trace)
 - [ ] (Monitor)
+- [ ] (Windows Platform Test)
 - [ ] (grpc-web,front end js html) 
 
 ### mark 
