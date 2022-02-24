@@ -18,6 +18,7 @@ import (
 
 // {{.GoTableName}}ServiceImpl {{.GoTableName}}ServiceImpl
 type {{.GoTableName}}ServiceImpl struct {
+	api.Unimplemented{{.GoTableName}}ServiceServer
 	Client *crud.Client
 }
 

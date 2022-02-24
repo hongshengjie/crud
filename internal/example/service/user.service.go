@@ -15,6 +15,7 @@ import (
 
 // UserServiceImpl UserServiceImpl
 type UserServiceImpl struct {
+	api.UnimplementedUserServiceServer
 	Client *crud.Client
 }
 

@@ -15,6 +15,7 @@ import (
 
 // AllTypeTableServiceImpl AllTypeTableServiceImpl
 type AllTypeTableServiceImpl struct {
+	api.UnimplementedAllTypeTableServiceServer
 	Client *crud.Client
 }
 
