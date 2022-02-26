@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"sync/atomic"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type ExecQuerier interface {
