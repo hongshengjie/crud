@@ -13,6 +13,7 @@
   function component() {
     var element = document.createElement('div');
     client.getUser(request, {}, (err, response) => {
+      console.log(err);
       console.log(response.toObject());
       element.innerHTML = _.join(['Hello', response.toObject().name], ' ');
     });

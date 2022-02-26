@@ -45,20 +45,25 @@ static_resources:
     http2_protocol_options: {}
     lb_policy: round_robin
     # win/mac hosts: Use address: host.docker.internal instead of address: localhost in the line below
+    health_checks:
+      timeout: 1s
+      interval: 30s
+      unhealthy_threshold: 1
+      healthy_threshold: 1
+      grpc_health_check: 
+       service_name: 
+       authority: 
+
     load_assignment:
       cluster_name: cluster_0
       endpoints:
         - lb_endpoints:
             - endpoint:
-                health_check_config:
-                  port_value: 9000
                 address:
                   socket_address:
                     address: 0.0.0.0
                     port_value: 9000
-            - endpoint:
-                health_check_config:
-                  port_value: 9001            
+            - endpoint:          
                 address:
                   socket_address:
                     address: 0.0.0.0

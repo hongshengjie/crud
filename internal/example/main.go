@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -12,18 +14,28 @@ import (
 	"github.com/hongshengjie/crud/internal/example/service"
 	"github.com/hongshengjie/crud/xsql"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 )
 
+var port int
+var dsn string
+
+func init() {
+	flag.IntVar(&port, "port", 9000, "server listen on port")
+	flag.StringVar(&dsn, "dsn", "root:123456@tcp(127.0.0.1:3306)/example?parseTime=true", "mysql dsn example(root:123456@tcp(127.0.0.1:3306)/example?parseTime=true)")
+}
 func main() {
-	l, err := net.Listen("tcp", ":9000")
+	flag.Parse()
+	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		panic(err)
 	}
 	svr := grpc.NewServer()
 	client, err := crud.NewClient(&xsql.Config{
-		DSN:          "root:123456@tcp(127.0.0.1:3306)/test?parseTime=true",
-		ReadDSN:      []string{"root:123456@tcp(127.0.0.1:3306)/test?parseTime=true"},
+		DSN:          dsn,
+		ReadDSN:      []string{dsn},
 		Active:       20,
 		Idle:         10,
 		IdleTimeout:  time.Hour * 4,
@@ -38,6 +50,7 @@ func main() {
 
 	api.RegisterAllTypeTableServiceServer(svr, al)
 	api.RegisterUserServiceServer(svr, u)
+	grpc_health_v1.RegisterHealthServer(svr, health.NewServer())
 	reflection.Register(svr)
 	go func() {
 		svr.Serve(l)
