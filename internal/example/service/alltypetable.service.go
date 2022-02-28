@@ -3,13 +3,16 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/hongshengjie/crud/internal/example/api"
-	"github.com/hongshengjie/crud/internal/example/crud"
-	"github.com/hongshengjie/crud/internal/example/crud/alltypetable"
-	"google.golang.org/protobuf/types/known/emptypb"
+	"example/api"
+	"example/crud/alltypetable"
+
 	"math"
 	"strings"
 	"time"
+
+	"example/crud"
+
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // AllTypeTableServiceImpl AllTypeTableServiceImpl

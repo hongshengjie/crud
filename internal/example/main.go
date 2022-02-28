@@ -1,6 +1,9 @@
 package main
 
 import (
+	"example/api"
+	"example/crud"
+	"example/service"
 	"flag"
 	"fmt"
 	"net"
@@ -9,9 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hongshengjie/crud/internal/example/api"
-	"github.com/hongshengjie/crud/internal/example/crud"
-	"github.com/hongshengjie/crud/internal/example/service"
 	"github.com/hongshengjie/crud/xsql"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
