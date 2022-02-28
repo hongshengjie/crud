@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hongshengjie/crud/internal/example/api"
-	"github.com/hongshengjie/crud/internal/example/crud"
-	"github.com/hongshengjie/crud/internal/example/crud/user"
-	"github.com/hongshengjie/crud/internal/example/service"
-	"github.com/hongshengjie/crud/xsql"
+	"example/api"
+	"example/crud"
+	"example/crud/user"
+	"example/service"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/hongshengjie/crud/xsql"
 )
 
 //go:generate protoc --go_out=. --go-grpc_out=.  alltypetable.api.proto

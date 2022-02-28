@@ -3,9 +3,9 @@ package crud
 import (
 	"context"
 	"database/sql"
+	"example/crud/alltypetable"
+	"example/crud/user"
 
-	"github.com/hongshengjie/crud/internal/example/crud/alltypetable"
-	"github.com/hongshengjie/crud/internal/example/crud/user"
 	"github.com/hongshengjie/crud/xsql"
 )
 

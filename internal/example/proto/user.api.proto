@@ -39,7 +39,7 @@ message UpdateUserReq{
 
 message ListUsersReq{
     // number of page
-    int64 page = 1 ;
+    int64 page = 1 ; // @gotags: json:"page" form:"page"
     // default 20
     int64 page_size = 2 ;
     // order by  for example :  [-id]  -: DESC 
