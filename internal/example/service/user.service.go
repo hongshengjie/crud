@@ -6,7 +6,6 @@ import (
 	"github.com/hongshengjie/crud/internal/example/api"
 	"github.com/hongshengjie/crud/internal/example/crud"
 	"github.com/hongshengjie/crud/internal/example/crud/user"
-	"github.com/hongshengjie/crud/xsql"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"math"
 	"strings"
@@ -146,9 +145,9 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 		Offset(offset).
 		Limit(size)
 
-	if req.GetOrderby() != "" {
-		odb := strings.TrimPrefix(req.GetOrderby(), "-")
-		if odb == req.GetOrderby() {
+	if req.GetOrderBy() != "" {
+		odb := strings.TrimPrefix(req.GetOrderBy(), "-")
+		if odb == req.GetOrderBy() {
 			finder.OrderAsc(odb)
 		} else {
 			finder.OrderDesc(odb)
@@ -158,21 +157,17 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *api.ListUsersReq) 
 		Find().
 		Count()
 
-	var ps []*xsql.Predicate
-	for _, v := range req.GetFilter() {
-		p, err := xsql.GenP(v.Field, v.Op, v.Value)
-		if err != nil {
-			return nil, err
-		}
-		ps = append(ps, p)
+	var ps []user.UserWhere
+	if req.GetIdGt() > 0 {
+		ps = append(ps, user.IdGT(req.GetIdGt()))
 	}
 
-	list, err := finder.WhereP(ps...).All(ctx)
+	list, err := finder.Where(ps...).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	count, err := counter.WhereP(ps...).Int64(ctx)
+	count, err := counter.Where(ps...).Int64(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -232,14 +232,8 @@ func ListUsers() {
 	r, err := s.ListUsers(ctx, &api.ListUsersReq{
 		Page:     1,
 		PageSize: 20,
-		Orderby:  "-id",
-		Filter: []*api.UserFilter{
-			{
-				Field: "name",
-				Op:    "in",
-				Value: "java,shengjie",
-			},
-		},
+		OrderBy:  "-id",
+		IdGt:     1,
 	})
 	rr, _ := json.Marshal(r)
 	fmt.Println(string(rr), err)

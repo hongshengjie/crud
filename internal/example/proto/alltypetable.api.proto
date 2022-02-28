@@ -97,17 +97,15 @@ message ListAllTypeTablesReq{
     // default 20
     int64 page_size = 2 ;
     // order by  for example :  [-id]  -: DESC 
-    string orderby = 3 ; 
-     // filter
-    repeated AllTypeTableFilter filter = 4 ;
-}
+    string order_by = 3 ; 
+    //  id > ?
+    int64 id_gt = 4;
+    // filter xxx like %?%
+    // string xxx_contains = 5;
+    // yyy > ?
+    // int64 yyy_gt = 6;
 
-message AllTypeTableFilter{
-    string field = 1;
-    string op = 2;
-    string value = 3;
 }
-
 
 message ListAllTypeTablesResp{
 

@@ -6,7 +6,6 @@ import (
 	"math"
 	"strings"
 	{{if .ImportTime}}"time"{{end}}
-	"github.com/hongshengjie/crud/xsql"
 	"{{.RelativePath}}/crud"
 	"{{.RelativePath}}/crud/{{.PackageName}}"
 	"{{.RelativePath}}/api"
@@ -180,9 +179,9 @@ func (s *{{.GoTableName}}ServiceImpl) List{{.GoTableName}}s(ctx context.Context,
 		Offset(offset).
 		Limit(size)
 
-	if req.GetOrderby() != "" {
-		odb := strings.TrimPrefix(req.GetOrderby(), "-")
-		if odb == req.GetOrderby() {
+	if req.GetOrderBy() != "" {
+		odb := strings.TrimPrefix(req.GetOrderBy(), "-")
+		if odb == req.GetOrderBy() {
 			finder.OrderAsc(odb)
 		} else {
 			finder.OrderDesc(odb)
@@ -192,21 +191,17 @@ func (s *{{.GoTableName}}ServiceImpl) List{{.GoTableName}}s(ctx context.Context,
 		Find().
 		Count()
 
-	var ps []*xsql.Predicate
-	for _, v := range req.GetFilter() {
-		p, err := xsql.GenP(v.Field, v.Op, v.Value)
-		if err != nil {
-			return nil, err
-		}
-		ps = append(ps, p)
+	var ps []{{.PackageName}}.{{.GoTableName}}Where
+	if req.Get{{.PrimaryKey.GoColumnName}}Gt() > 0 {
+		ps = append(ps, {{.PackageName}}.{{.PrimaryKey.GoColumnName}}GT(req.GetIdGt()))
 	}
 
-	list, err := finder.WhereP(ps...).All(ctx)
+	list, err := finder.Where(ps...).All(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	count, err := counter.WhereP(ps...).Int64(ctx)
+	count, err := counter.Where(ps...).Int64(ctx)
 	if err != nil {
 		return nil, err
 	}

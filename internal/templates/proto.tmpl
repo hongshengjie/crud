@@ -42,17 +42,15 @@ message List{{.GoTableName}}sReq{
     // default 20
     int64 page_size = 2 ;
     // order by  for example :  [-id]  -: DESC 
-    string orderby = 3 ; 
-     // filter
-    repeated {{.GoTableName}}Filter filter = 4 ;
-}
+    string order_by = 3 ; 
+    //  {{.PrimaryKey.ColumnName}} > ?
+    int64 {{.PrimaryKey.ColumnName}}_gt = 4;
+    // filter xxx like %?%
+    // string xxx_contains = 5;
+    // yyy > ?
+    // int64 yyy_gt = 6;
 
-message {{.GoTableName}}Filter{
-    string field = 1;
-    string op = 2;
-    string value = 3;
 }
-
 
 message List{{.GoTableName}}sResp{
 
