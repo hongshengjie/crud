@@ -1,9 +1,13 @@
-## 用crud自动创建GRPC服务，构建GRPC-Web前端代码，etcd作为服务发现,并用envoy负载均衡
+## 用crud快速创建GRPC微服务
 
+- [x] 用crud生成持久层代码、proto接口定义、grpc服务实现
+- [x] 用etcd作服务发现
+- [x] 使用grpc-web生成前端js代码
+- [x] 使用envoy作为最外层网关代理、均衡负载、健康检查等功能
+- [ ] (使envoy可以根据后端节点变更，自动更新代理配置)
 
 ### install
 ```bash 
-
 makdir example
 cd example
 crud init 
