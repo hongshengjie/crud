@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"example/api"
 	"example/crud"
+	"example/discovery"
 	"example/service"
 	"flag"
 	"fmt"
@@ -12,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hongshengjie/crud/xsql"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -21,6 +24,10 @@ import (
 
 var port int
 var dsn string
+
+const (
+	appID = "example.user"
+)
 
 func init() {
 	flag.IntVar(&port, "port", 9000, "server listen on port")
@@ -55,12 +62,20 @@ func main() {
 	go func() {
 		svr.Serve(l)
 	}()
+	instanceID := appID + "/" + uuid.New().String()
+	err = discovery.Register(context.Background(), appID, instanceID, fmt.Sprintf("0.0.0.0:%d", port))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(instanceID)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		s := <-c
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
+			discovery.DeleteRegister(context.Background(), instanceID)
+
 			svr.GracefulStop()
 			return
 		case syscall.SIGHUP:
