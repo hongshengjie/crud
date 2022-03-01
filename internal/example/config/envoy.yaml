@@ -21,7 +21,7 @@ static_resources:
             - name: local_service
               domains: ["*"]
               routes:
-              - match: { prefix: "/" }
+              - match: { prefix: "/example" }
                 route:
                   cluster: example_service
                   timeout: 0s

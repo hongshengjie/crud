@@ -4,6 +4,7 @@
 - [x] 用etcd作服务发现
 - [x] 使用grpc-web生成前端js代码
 - [x] 使用envoy作为最外层网关代理、均衡负载、健康检查等功能
+- [x] 使用protoc-gen-go-gin 生成对应的http服务
 - [ ] (使envoy可以根据后端节点变更，自动更新代理配置)
 
 ### install
@@ -46,9 +47,13 @@ paste content to main.go
 var port int
 var dsn string
 
+const (
+	appID = "example.user"
+)
+
 func init() {
 	flag.IntVar(&port, "port", 9000, "server listen on port")
-	flag.StringVar(&dsn, "dsn", "root:123456@tcp(127.0.0.1:3306)/example?parseTime=true", "mysql dsn example(root:123456@tcp(127.0.0.1:3306)/example?parseTime=true)")
+	flag.StringVar(&dsn, "dsn", "root:123456@tcp(127.0.0.1:3306)/test?parseTime=true", "mysql dsn example(root:123456@tcp(127.0.0.1:3306)/example?parseTime=true)")
 }
 func main() {
 	flag.Parse()
@@ -76,16 +81,41 @@ func main() {
 	api.RegisterUserServiceServer(svr, u)
 	grpc_health_v1.RegisterHealthServer(svr, health.NewServer())
 	reflection.Register(svr)
+
+	m := cmux.New(l)
+
+	e := gin.Default()
+	api.RegisterUserServiceGin(e, u, nil)
+	api.RegisterAllTypeTableServiceGin(e, al, nil)
+	// Match connections in order:
+	// First grpc, then HTTP, and otherwise Go RPC/TCP.
+	grpcL := m.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+	httpL := m.Match(cmux.HTTP1Fast())
+	hsvr := &http.Server{
+		Handler: e,
+	}
 	go func() {
-		svr.Serve(l)
+		go svr.Serve(grpcL)
+		go hsvr.Serve(httpL)
+		go m.Serve()
 	}()
+
+	instanceID := appID + "/" + uuid.New().String()
+	err = discovery.Register(context.Background(), appID, instanceID, fmt.Sprintf("0.0.0.0:%d", port))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(instanceID)
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		s := <-c
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
+			discovery.DeleteRegister(context.Background(), instanceID)
+			hsvr.Shutdown(context.Background())
 			svr.GracefulStop()
+			m.Close()
 			return
 		case syscall.SIGHUP:
 		default:
@@ -93,6 +123,7 @@ func main() {
 		}
 	}
 }
+
 
 ```
 

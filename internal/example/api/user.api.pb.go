@@ -213,7 +213,7 @@ type ListUsersReq struct {
 	unknownFields protoimpl.UnknownFields
 
 	// number of page
-	Page int64 `protobuf:"varint,1,opt,name=page,proto3" json:"page" form:"page"` // @gotags: json:"page" form:"page"
+	Page int64 `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty"`
 	// default 20
 	PageSize int64 `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 	// order by  for example :  [-id]  -: DESC

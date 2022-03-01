@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/google/uuid v1.1.2
 	github.com/hongshengjie/crud v1.0.7
+	github.com/soheilhy/cmux v0.1.5
 	go.etcd.io/etcd/client/v3 v3.5.2
 	google.golang.org/grpc v1.44.0
 	google.golang.org/protobuf v1.27.1
