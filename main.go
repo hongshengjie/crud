@@ -40,6 +40,7 @@ var clientTmpl []byte
 var database string
 var path string
 var service bool
+var http bool
 var protopkg string
 
 //var fields string
@@ -48,6 +49,7 @@ const defaultDir = "crud"
 func init() {
 	//flag.StringVar(&path, "path", "cr", ".sql file path or folder")
 	flag.BoolVar(&service, "service", false, "-service  generate GRPC proto message and service implementation")
+	flag.BoolVar(&http, "http", false, "-http  generate Gin controller")
 	flag.StringVar(&protopkg, "protopkg", "", "-protopkg  proto package field value")
 }
 
@@ -148,11 +150,26 @@ func generateService(tableObj *model.Table) {
 	os.Mkdir(filepath.Join("service"), os.ModePerm)
 
 	generateFile(filepath.Join("proto", pkgName+".api.proto"), string(protoTmpl), f, tableObj)
-	//protoc --go_out=. --go-grpc_out=.  user.api.proto
-	cmd := exec.Command("protoc", "-I.", "-I/usr/local/include", "--go_out=.", "--go-grpc_out=.", filepath.Join("proto", pkgName+".api.proto"))
+
+	// proto-go  grpc
+	var cmd *exec.Cmd
+	if http {
+		cmd = exec.Command("protoc", "-I.", "--go_out=.", "--go-grpc_out=.", "--go-gin_out=.", filepath.Join("proto", pkgName+".api.proto"))
+	} else {
+		cmd = exec.Command("protoc", "-I.", "--go_out=.", "--go-grpc_out=.", filepath.Join("proto", pkgName+".api.proto"))
+	}
+
 	cmd.Dir = filepath.Join(model.GetCurrentPath())
 	log.Println(cmd.Dir, "exec:", cmd.String())
 	s, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Println(string(s), err)
+	}
+	// inject-tag
+	cmd = exec.Command("protoc-go-inject-tag", "-input", filepath.Join("api", pkgName+".api.pb.go"))
+	cmd.Dir = filepath.Join(model.GetCurrentPath())
+	log.Println(cmd.Dir, "exec:", cmd.String())
+	s, err = cmd.CombinedOutput()
 	if err != nil {
 		log.Println(string(s), err)
 	}

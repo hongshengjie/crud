@@ -34,6 +34,8 @@ Crud is a very easy to learn and easy to use ORM framework. Using crud can enabl
 - Support the generation of proto files and service semi implementation codes containing grpc interface definitions according to SQL DDL table structure definition files
 
 
+## [example](https://github.com/hongshengjie/crud-exmaple)
+
 ## Getting Started 
 
 ### install

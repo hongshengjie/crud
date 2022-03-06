@@ -20,12 +20,12 @@ message {{.GoTableName}} {
 
 {{- range $index,$field := .Fields }}
     //{{$field.ColumnComment}}
-    {{$field.ProtoType }}	{{ $field.ColumnName }} = {{Incr $index}} ; 
+    {{$field.ProtoType }}	{{ $field.ColumnName }} = {{Incr $index}} ; // @gotags: json:"{{$field.ColumnName}}"
 {{- end}}  
 }
 
 message {{.GoTableName}}{{.PrimaryKey.GoColumnName}}{
-    {{.PrimaryKey.ProtoType}} {{.PrimaryKey.ColumnName}} = 1 ;
+    {{.PrimaryKey.ProtoType}} {{.PrimaryKey.ColumnName}} = 1 ; // @gotags: form:"id"
 }
 
 message Update{{.GoTableName}}Req{
@@ -38,13 +38,13 @@ message Update{{.GoTableName}}Req{
 
 message List{{.GoTableName}}sReq{
     // number of page
-    int64 page = 1 ;
+    int64 page = 1 ;// @gotags: form:"page"
     // default 20
-    int64 page_size = 2 ;
+    int64 page_size = 2 ;// @gotags: form:"page_size"
     // order by  for example :  [-id]  -: DESC 
-    string order_by = 3 ; 
+    string order_by = 3 ; // @gotags: form:"order_by"
     //  {{.PrimaryKey.ColumnName}} > ?
-    int64 {{.PrimaryKey.ColumnName}}_gt = 4;
+    int64 {{.PrimaryKey.ColumnName}}_gt = 4; // @gotags: form:"{{.PrimaryKey.ColumnName}}_gt"
     // filter xxx like %?%
     // string xxx_contains = 5;
     // yyy > ?
@@ -54,9 +54,9 @@ message List{{.GoTableName}}sReq{
 
 message List{{.GoTableName}}sResp{
 
-    repeated {{.GoTableName}} {{.TableName}}s = 1 ;
+    repeated {{.GoTableName}} {{.TableName}}s = 1 ; // @gotags: json:"{{.TableName}}s"
 
-    int64 total_count = 2 ;
+    int64 total_count = 2 ; // @gotags: json:"total_count"
     
-    int64 page_count = 3 ;
+    int64 page_count = 3 ; // @gotags: json:"page_count"
 }
