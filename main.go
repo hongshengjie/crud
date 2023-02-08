@@ -43,7 +43,7 @@ var service bool
 var http bool
 var protopkg string
 
-//var fields string
+// var fields string
 const defaultDir = "crud"
 
 func init() {

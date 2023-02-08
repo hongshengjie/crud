@@ -5,7 +5,7 @@ syntax="proto3";
 package {{.Protopkg}};
 {{- end}}
 option go_package = "/api";
-
+{{ $tableName := .GoTableName}}
 import "google/protobuf/empty.proto";
 
 service {{.GoTableName}}Service { 
@@ -22,6 +22,13 @@ message {{.GoTableName}} {
     //{{$field.ColumnComment}}
     {{$field.ProtoType }}	{{ $field.ColumnName }} = {{Incr $index}} ; // @gotags: json:"{{$field.ColumnName}}"
 {{- end}}  
+}
+
+enum {{.GoTableName}}Field{
+    {{$tableName}}_unknow = 0;
+  {{- range $index,$field := .Fields }}
+    {{$tableName}}_{{ $field.ColumnName }} = {{Incr $index}};
+{{- end}}   
 }
 
 message {{.GoTableName}}{{.PrimaryKey.GoColumnName}}{
@@ -43,13 +50,14 @@ message List{{.GoTableName}}sReq{
     int64 page_size = 2 ;// @gotags: form:"page_size"
     // order by  for example :  [-id]  -: DESC 
     string order_by = 3 ; // @gotags: form:"order_by"
-    //  {{.PrimaryKey.ColumnName}} > ?
-    int64 {{.PrimaryKey.ColumnName}}_gt = 4; // @gotags: form:"{{.PrimaryKey.ColumnName}}_gt"
-    // filter xxx like %?%
-    // string xxx_contains = 5;
-    // yyy > ?
-    // int64 yyy_gt = 6;
+     // filter
+    repeated {{.GoTableName}}Filter filter = 4 ;
+}
 
+message {{.GoTableName}}Filter{
+     {{.GoTableName}}Field field = 1;
+    string op = 2;
+    string value = 3;
 }
 
 message List{{.GoTableName}}sResp{
