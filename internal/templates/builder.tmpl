@@ -187,13 +187,13 @@ func (s *SelectBuilder)WhereP(ps ... *xsql.Predicate)*SelectBuilder{
 }
 
 // Offset Offset
-func (s *SelectBuilder) Offset(offset int64) *SelectBuilder {
+func (s *SelectBuilder) Offset(offset int32) *SelectBuilder {
 	s.builder = s.builder.Offset(int(offset))
 	return s
 }
 
 // Limit Limit
-func (s *SelectBuilder) Limit(limit int64) *SelectBuilder {
+func (s *SelectBuilder) Limit(limit int32) *SelectBuilder {
 	s.builder = s.builder.Limit(int(limit))
 	return s
 }

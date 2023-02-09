@@ -45,9 +45,9 @@ message Update{{.GoTableName}}Req{
 
 message List{{.GoTableName}}sReq{
     // number of page
-    int64 page = 1 ;// @gotags: form:"page"
+    int32 page = 1 ;// @gotags: form:"page"
     // default 20
-    int64 page_size = 2 ;// @gotags: form:"page_size"
+    int32 page_size = 2 ;// @gotags: form:"page_size"
     // order by  for example :  [-id]  -: DESC 
     string order_by = 3 ; // @gotags: form:"order_by"
      // filter
@@ -64,7 +64,7 @@ message List{{.GoTableName}}sResp{
 
     repeated {{.GoTableName}} {{.TableName}}s = 1 ; // @gotags: json:"{{.TableName}}s"
 
-    int64 total_count = 2 ; // @gotags: json:"total_count"
+    int32 total_count = 2 ; // @gotags: json:"total_count"
     
-    int64 page_count = 3 ; // @gotags: json:"page_count"
+    int32 page_count = 3 ; // @gotags: json:"page_count"
 }

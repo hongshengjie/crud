@@ -217,9 +217,9 @@ func (s *{{.GoTableName}}ServiceImpl) List{{.GoTableName}}s(ctx context.Context,
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	pageCount := int64(math.Ceil(float64(count) / float64(size)))
+	pageCount := int32(math.Ceil(float64(count) / float64(size)))
 
-	return &api.List{{.GoTableName}}sResp{ {{.GoTableName}}s: convert{{.GoTableName}}List(list), TotalCount: count, PageCount: pageCount}, nil
+	return &api.List{{.GoTableName}}sResp{ {{.GoTableName}}s: convert{{.GoTableName}}List(list), TotalCount: int32(count), PageCount: pageCount}, nil
 }
 
 func convert{{.GoTableName}}(a *{{.PackageName}}.{{.GoTableName}}) *api.{{.GoTableName}} {
