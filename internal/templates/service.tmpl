@@ -100,7 +100,7 @@ func (s *{{.GoTableName}}ServiceImpl) Delete{{.GoTableName}}(ctx context.Context
 func (s *{{.GoTableName}}ServiceImpl) Update{{.GoTableName}}(ctx context.Context, req *api.Update{{.GoTableName}}Req) (*api.{{.GoTableName}}, error) {
 
 	if len(req.GetUpdateMask()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "update_mask empty")
+		req.UpdateMask = {{$pkgName}}.Columns()
 	}
 	update := s.Client.{{.GoTableName}}.Update()
 	for _, v := range req.GetUpdateMask() {
