@@ -24,13 +24,18 @@ type {{.GoTableName}}ServiceImpl struct {
 	Client *crud.Client
 }
 
+type IValidate{{.GoTableName}} interface {
+	Validate{{.GoTableName}}(a *api.{{.GoTableName}}) error
+}
+
 // Create{{.GoTableName}} Create{{.GoTableName}}
 func (s *{{.GoTableName}}ServiceImpl) Create{{.GoTableName}}(ctx context.Context, req *api.{{.GoTableName}}) (*api.{{.GoTableName}}, error) {
-	
-	// do some parameter check
-	// if req.GetXXXX() != 0 {
-	// 	return nil, errors.New(-1, "参数错误")
-	// }
+	if checker, ok := interface{}(s).(IValidate{{.GoTableName}}); ok {
+		if err := checker.Validate{{.GoTableName}}(req); err != nil {
+			return nil, err
+		}
+	}
+
 	a := &{{.PackageName}}.{{.GoTableName}}{
 		{{- range $index,$field := .Fields }}
 			{{- if ne .GoColumnType  "time.Time"}}
@@ -98,9 +103,13 @@ func (s *{{.GoTableName}}ServiceImpl) Delete{{.GoTableName}}(ctx context.Context
 
 // Update{{.PackageName}} Update{{.GoTableName}}
 func (s *{{.GoTableName}}ServiceImpl) Update{{.GoTableName}}(ctx context.Context, req *api.Update{{.GoTableName}}Req) (*api.{{.GoTableName}}, error) {
-
+	if checker, ok := interface{}(s).(IValidate{{.GoTableName}}); ok {
+		if err := checker.Validate{{.GoTableName}}(req.{{.GoTableName}}); err != nil {
+			return nil, err
+		}
+	}
 	if len(req.GetUpdateMask()) == 0 {
-		req.UpdateMask = {{$pkgName}}.Columns()
+		return nil, status.Error(codes.InvalidArgument, "empty filter condition")
 	}
 	update := s.Client.{{.GoTableName}}.Update()
 	for _, v := range req.GetUpdateMask() {
@@ -182,22 +191,21 @@ func (s *{{.GoTableName}}ServiceImpl) List{{.GoTableName}}s(ctx context.Context,
 		Offset(offset).
 		Limit(size)
 
-	if req.GetOrderBy() != "" {
-		odb := strings.TrimPrefix(req.GetOrderBy(), "-")
-		if odb == req.GetOrderBy() {
-			finder.OrderAsc(odb)
-		} else {
-			finder.OrderDesc(odb)
-		}
-	}else{
-			finder.OrderDesc("{{.PrimaryKey.ColumnName}}")
+	if req.GetOrderByField() == api.{{.GoTableName}}Field_{{.GoTableName}}_unknow {
+		req.OrderByField = api.{{.GoTableName}}Field_{{.GoTableName}}_{{.PrimaryKey.ColumnName}}
+	}
+	odb := strings.TrimPrefix(req.GetOrderByField().String(), "{{.GoTableName}}_")
+	if req.GetOrderByDesc() {
+		finder.OrderDesc(odb)
+	} else {
+		finder.OrderAsc(odb)
 	}
 	counter := s.Client.{{.GoTableName}}.
 		Find().
 		Count()
 
 	var ps []*xsql.Predicate
-	for _, v := range req.GetFilter() {
+	for _, v := range req.GetFilters() {
 		p, err := xsql.GenP(strings.TrimPrefix(v.Field.String(), "{{.GoTableName}}_"), v.Op, v.Value)
 		if err != nil {
 			return nil, err

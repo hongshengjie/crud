@@ -48,10 +48,12 @@ message List{{.GoTableName}}sReq{
     int32 page = 1 ;// @gotags: form:"page"
     // default 20
     int32 page_size = 2 ;// @gotags: form:"page_size"
-    // order by  for example :  [-id]  -: DESC 
-    string order_by = 3 ; // @gotags: form:"order_by"
+    // order by field
+    {{.GoTableName}}Field order_by_field = 3 ; // @gotags: form:"order_by_field"
+    // ASC DESC
+    bool order_by_desc = 4; //@gotags: form:"order_by_desc"
      // filter
-    repeated {{.GoTableName}}Filter filter = 4 ;
+    repeated {{.GoTableName}}Filter filters = 5 ; //@gotags: form:"filters"
 }
 
 message {{.GoTableName}}Filter{
