@@ -1,0 +1,448 @@
+{{ $tableName := .GoTableName}}
+import * as React from 'react';
+import { List{{.GoTableName}}sReq, List{{.GoTableName}}sResp, {{.GoTableName}}, {{.GoTableName}}Field, {{.GoTableName}}Filter } from '../proto/{{.PackageName}}.api';
+import { Box, Button, Card, CardBody, CardHeader, CheckBox, DataTable, Form, FormField, Layer, Page, PageContent, PageHeader, Pagination, Select, Tag, Text, TextInput, Notification } from 'grommet';
+import { {{.GoTableName}}ServiceClient } from '../proto/{{.PackageName}}.api.client'
+import { Close } from 'grommet-icons';
+import { RpcError } from '@protobuf-ts/runtime-rpc'
+
+
+
+export interface I{{.GoTableName}}PageProps {
+    client: {{.GoTableName}}ServiceClient
+}
+
+export interface I{{.GoTableName}}PageState {
+    request: List{{.GoTableName}}sReq
+    response: List{{.GoTableName}}sResp | null
+    filters: {{.GoTableName}}Filter[]
+    current_filter: {{.GoTableName}}Filter
+    current_item: {{.GoTableName}} | null
+    show_layer: boolean
+    rpc_err: RpcError | null
+
+}
+
+export default class {{.GoTableName}}Page extends React.Component<I{{.GoTableName}}PageProps, I{{.GoTableName}}PageState> {
+    constructor(props: I{{.GoTableName}}PageProps) {
+        super(props);
+
+        this.state = {
+            request: {
+                page: 1,
+                page_size: 20,
+                order_by_field: {{.GoTableName}}Field.{{.GoTableName}}_unknow,
+                order_by_desc: true,
+                filters: []
+            },
+            response: null,
+            filters: [],
+            current_filter: {
+                field: {{.GoTableName}}Field.{{.GoTableName}}_unknow,
+                op: "",
+                value: ""
+            },
+            current_item: null,
+            show_layer: false,
+            rpc_err: null
+
+        }
+    }
+    componentDidMount(): void {
+        this.fetchList(this.state.request)
+    }
+    fetchList(req: List{{.GoTableName}}sReq) {
+        this.props.client.list{{.GoTableName}}s(req).then((ret) => {
+            this.setState((current) => ({
+                ...current,
+                response: ret.response,
+                request: req,
+                show_layer: false
+            }))
+        }).catch((status: RpcError) => {
+            this.setState((cur) => ({ ...cur, rpc_err: status }))
+
+        }).finally()
+    }
+    public render() {
+        return (
+            <Page>
+                <PageHeader title="{{.GoTableName}} Manager" alignSelf='center'></PageHeader>
+                <PageContent>
+                    <Box direction='row' gap='small' >
+                        <Select
+                            placeholder='Field'
+                            labelKey={(option) => {
+                                return {{.GoTableName}}Field[option].substring("{{.GoTableName}}_".length)
+                            }}
+
+                            options={[
+                                {{- range $index,$field := .Fields }}
+                                    {{$tableName}}Field.{{$tableName}}_{{$field.ColumnName}},
+                                {{- end}}  
+                               
+                            ]}
+                            value={this.state.current_filter?.field}
+                            onChange={({ option }) => {
+
+                                let f: {{.GoTableName}}Filter = this.state.current_filter
+                                    ? {
+                                        field: option,
+                                        op: this.state.current_filter.op,
+                                        value: this.state.current_filter.value
+                                    }
+                                    : {
+                                        field: option,
+                                        op: "=",
+                                        value: ""
+                                    }
+                                this.setState(
+                                    (current) => ({
+                                        ...current,
+                                        current_filter: f
+                                    })
+                                )
+                            }}
+                        />
+                        <Select
+                            placeholder="Operator"
+                            options={["=", "<>", ">", ">=", "<", "<=", "IN", "NOT IN", "LIKE"]}
+                            value={this.state.current_filter?.op}
+                            onChange={({ option }) => {
+                                let f: {{.GoTableName}}Filter = this.state.current_filter
+                                    ? {
+                                        field: this.state.current_filter.field,
+                                        op: option,
+                                        value: this.state.current_filter.value
+                                    }
+                                    : {
+                                        field: {{.GoTableName}}Field.{{.GoTableName}}_{{.PrimaryKey.ColumnName}},
+                                        op: option,
+                                        value: ""
+                                    }
+
+                                this.setState(
+                                    (current) => ({
+                                        ...current,
+                                        current_filter: f
+                                    })
+                                )
+                            }}
+                        />
+                        <TextInput
+                            placeholder="Condition Value"
+                            value={this.state.current_filter?.value}
+                            onChange={event => {
+                                let f: {{.GoTableName}}Filter = this.state.current_filter
+                                    ? {
+                                        field: this.state.current_filter.field,
+                                        op: this.state.current_filter.op,
+                                        value: event.target.value.toString()
+                                    }
+                                    : {
+                                        field: {{.GoTableName}}Field.{{.GoTableName}}_{{.PrimaryKey.ColumnName}},
+                                        op: "=",
+                                        value: event.target.value.toString()
+                                    }
+                                this.setState(
+                                    (current) => ({
+                                        ...current,
+                                        current_filter: f
+                                    })
+                                )
+                            }}
+                        />
+                        <Button
+                            label="+Add"
+                            onClick={() => {
+                                let f = this.state.filters
+                                if (this.state.current_filter) {
+                                    f.push(this.state.current_filter)
+                                    this.setState((cur) => ({
+                                        ...cur,
+                                        filters: f
+                                    }))
+                                }
+                            }
+
+                            }
+                        />
+                        <Select
+                            placeholder='OrderBy'
+                            labelKey={(option) => {
+                                return {{.GoTableName}}Field[option].substring("{{.GoTableName}}_".length)
+                            }}
+
+                            options={[
+                                {{- range $index,$field := .Fields }}
+                                    {{$tableName}}Field.{{$tableName}}_{{$field.ColumnName}},
+                                {{- end}}  
+                            ]}
+                            value={this.state.request.order_by_field}
+                            onChange={({ option }) => {
+                                let request = this.state.request
+                                request.order_by_field = option
+                                this.fetchList(request)
+                            }}
+                        />
+
+                        <CheckBox
+                            checked={this.state.request.order_by_desc}
+                            label="IsDesc"
+                            onChange={(event) => {
+                                let request = this.state.request
+                                request.order_by_desc = event.target.checked
+                                this.fetchList(request)
+                            }}
+
+                        />
+
+                        <Button
+                            label="Fliter"
+                            onClick={() => {
+                                this.fetchList({
+                                    ...this.state.request,
+                                    filters: this.state.filters
+                                })
+                            }
+                            }
+                        />
+                    </Box>
+
+                    {
+                        this.state.filters.length > 0 ?
+                            <Box
+                                align="center"
+                                pad="large"
+                                direction='row'>
+                                {
+                                    this.state.filters.map((item, index) => {
+
+                                        let field = {{.GoTableName}}Field[item.field].substring("{{.GoTableName}}_".length)
+                                        return <Tag
+                                            key={index}
+                                            value={field + " " + item.op + " " + item.value}
+                                            onRemove={() => {
+                                                let f = this.state.filters
+                                                if (index > -1) {
+                                                    f.splice(index, 1);
+                                                }
+                                                this.setState((cur) => ({
+                                                    ...cur,
+                                                    filters: f
+                                                }))
+                                            }}
+                                        />
+                                    })
+                                }
+                            </Box>
+                            : ""
+                    }
+                    <DataTable
+                        columns={[
+
+                                {{- range $index,$field := .Fields }}
+                                        {
+                                            property: '{{$field.ColumnName}}',
+                                            header: '{{$field.ColumnComment}}',
+                                            render: datum => (
+                                                datum.{{$field.ColumnName}}.toString()
+                                            ),
+                                        },
+                                {{- end}}  
+
+                        ]}
+                        data={this.state.response?.{{.TableName}}s}
+                        onClickRow={(event) => {
+                            this.setState((cur) => ({
+                                ...cur,
+                                current_item: event.datum,
+                                show_layer: true
+                            }))
+                        }}
+                    />
+
+                    <Box
+                        direction='row'
+                        justify='between'>
+                        <Button
+                            label="New"
+                            onClick={
+                                () => {
+                                    let edit: {{.GoTableName}} = {
+                                        {{- range $index,$field := .Fields }}
+                                            {{$field.ColumnName}}:{{GoTypeToTypeScriptDefaultValue $field.GoColumnType }} ,
+                                        {{- end}} 
+                                       
+                                    }
+                                    this.setState((cur) => ({
+                                        ...cur, current_item: edit, show_layer: true
+                                    }))
+                                }
+                            }
+                        />
+
+                        <Pagination
+                            numberItems={this.state.response?.total_count}
+                            step={this.state.request.page_size}
+                            page={this.state.request.page}
+                            onChange={({ page }) => {
+                                let req: List{{.GoTableName}}sReq = {
+                                    ...this.state.request,
+                                    page: page
+                                }
+                                this.fetchList(req)
+                            }}
+                        />
+                        <Box direction='row'>
+
+                            <Select
+                                size='small'
+                                placeholder="page_size"
+                                options={[20, 50, 100]}
+                                value={this.state.request.page_size}
+                                onChange={({ option }) => {
+                                    let request = this.state.request
+                                    if (request.page_size != option) {
+                                        request.page_size = option
+                                        this.fetchList(request)
+                                    }
+                                }}
+                            />
+                            <Tag
+                                name="total"
+                                value={this.state.response ? this.state.response.total_count : 0}
+                            />
+                        </Box>
+
+                    </Box>
+
+                    {
+                        this.state.current_item && this.state.show_layer ?
+                            <Layer
+                                position="center"
+                                modal
+                                onClickOutside={() => {
+                                    this.setState((cur) => ({ ...cur, show_layer: false }))
+                                }}
+                                onEsc={() => {
+                                    this.setState((cur) => ({ ...cur, show_layer: false }))
+                                }}
+                            >
+                                <Card overflow={ {vertical:'scroll' } }>
+                                    <CardHeader pad="medium" >Edit
+                                        <Button icon={<Close />}
+                                            onClick={() => {
+                                                this.setState((cur) => ({
+                                                    ...cur,
+                                                    show_layer: false
+                                                }))
+                                            }} />
+                                    </CardHeader>
+                                    <CardBody pad="small">
+                                        <Form
+                                            value={this.state.current_item}
+                                            onChange={(nextValue: {{.GoTableName}}, options) => {
+
+                                                this.setState((cur) => ({
+                                                    ...cur,
+                                                    current_item: nextValue
+                                                }))
+                                            }}
+                                            onSubmit={(event) => {
+                                                if (event.value.id > 0) {
+                                                    this.props.client.update{{.GoTableName}}({
+                                                        {{.TableName}}: event.value,
+                                                        update_mask: Object.keys(event.touched)
+                                                    })
+                                                        .then(() => {
+                                                            this.fetchList(this.state.request)
+                                                        }).catch((status: RpcError) => {
+                                                            this.setState((cur) => ({ ...cur, rpc_err: status }))
+
+                                                        })
+
+                                                } else {
+                                                    this.props.client.create{{.GoTableName}}(event.value)
+                                                        .then(() => {
+                                                            this.fetchList(this.state.request)
+                                                        }).catch((status: RpcError) => {
+                                                            this.setState((cur) => ({ ...cur, rpc_err: status }))
+
+                                                        })
+                                                }
+                                            }}
+                                        >
+
+                                        {{- range $index,$field := .Fields }}
+                                            <FormField
+                                                name="{{$field.ColumnName}}"
+                                                htmlFor="text-input-{{$field.ColumnName}}"
+                                                label="{{$field.ColumnComment}}">
+                                                <TextInput
+                                                    id="text-input-{{$field.ColumnName}}"
+                                                    name="{{$field.ColumnName}}"
+ 	                                                {{if $field.IsAutoIncrment}}
+                                                    disabled
+                                                    {{end}}
+                                                    value={this.state.current_item.{{$field.ColumnName}}.toString()}
+                                                />
+                                            </FormField>
+
+                                        {{- end}}  
+                                            <Box
+                                                direction="row"
+                                                justify='between'  >
+                                                <Button
+                                                    type="submit"
+                                                    primary
+                                                    label="Save"
+                                                />
+                                                <Button
+                                                    color='red'
+                                                    type="button"
+                                                    label="Delete"
+                                                    onClick={
+                                                        (event) => {
+                                                            let id = this.state.current_item?.id
+                                                            if (id) {
+                                                                this.props.client.delete{{.GoTableName}}({ id: id })
+                                                                    .then(() => {
+                                                                        this.fetchList(this.state.request)
+                                                                        this.setState((cur) => ({
+                                                                            ...cur,
+                                                                            current_item: null,
+                                                                        }))
+                                                                    })
+                                                            }
+                                                        }
+                                                    } />
+                                            </Box>
+                                        </Form>
+                                    </CardBody>
+                                </Card>
+                            </Layer>
+                            : null
+                    }
+                </PageContent>
+                {
+                    this.state.rpc_err ? <Notification
+                        toast
+                        time={3000}
+                        title={this.state.rpc_err.code}
+                        message={this.state.rpc_err.message}
+                        onClose={() => {
+                            this.setState((cur) => ({
+                                ...cur,
+                                rpc_err: null
+                            }))
+                        }}
+                        status="warning"
+                    /> :
+                        null
+                }
+            </Page>
+        );
+    }
+
+}

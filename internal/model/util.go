@@ -109,11 +109,36 @@ func GoTypeToProtoType(g string) string {
 	}
 }
 
+func GoTypeToTypeScriptDefaultValue(g string) string {
+	switch g {
+	case "[]byte":
+		return "new Uint8Array()"
+	case "bool":
+		return "false"
+	case "string":
+		return "''"
+	case "float32":
+		return "0"
+	case "float64":
+		return "0"
+	case "int8", "int16", "int32":
+		return "0"
+	case "uint8", "uint16", "uint32":
+		return "0"
+	case "uint64", "int64", "int":
+		return "0n"
+	case "time.Time":
+		return "''"
+	default:
+		return ""
+	}
+}
+
 func Incr(x int) int {
 	return x + 1
 }
 
-//SQLTool SQLTool
+// SQLTool SQLTool
 func SQLTool(t *Table, flag string) string {
 	var ns []string
 	for _, v := range t.Fields {

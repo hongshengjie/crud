@@ -37,11 +37,15 @@ var serviceTmpl []byte
 //go:embed "internal/templates/client.tmpl"
 var clientTmpl []byte
 
+//go:embed "internal/templates/react-grommet.tmpl"
+var reactGrommetTmpl []byte
+
 var database string
 var path string
 var service bool
 var http bool
 var protopkg string
+var reactgrommet bool
 
 // var fields string
 const defaultDir = "crud"
@@ -50,7 +54,9 @@ func init() {
 	//flag.StringVar(&path, "path", "cr", ".sql file path or folder")
 	flag.BoolVar(&service, "service", false, "-service  generate GRPC proto message and service implementation")
 	flag.BoolVar(&http, "http", false, "-http  generate Gin controller")
+	flag.BoolVar(&reactgrommet, "reactgrommet", false, "-reactgrommet  generate reactgrommet tsx code work with -service")
 	flag.StringVar(&protopkg, "protopkg", "", "-protopkg  proto package field value")
+
 }
 
 func main() {
@@ -125,9 +131,10 @@ func tableFromSql(path string) (tableObjs []*model.Table, isDir bool) {
 }
 
 var f = template.FuncMap{
-	"sqltool":  model.SQLTool,
-	"isnumber": model.IsNumber,
-	"Incr":     model.Incr,
+	"sqltool":                        model.SQLTool,
+	"isnumber":                       model.IsNumber,
+	"Incr":                           model.Incr,
+	"GoTypeToTypeScriptDefaultValue": model.GoTypeToTypeScriptDefaultValue,
 }
 
 func generateFiles(tableObj *model.Table) {
@@ -175,6 +182,10 @@ func generateService(tableObj *model.Table) {
 	}
 
 	generateFile(filepath.Join("service", pkgName+".service.go"), string(serviceTmpl), f, tableObj)
+
+	if reactgrommet {
+		generateFile(filepath.Join("web", "src", "pages", pkgName+".tsx"), string(reactGrommetTmpl), f, tableObj)
+	}
 }
 
 func generateFile(filename, tmpl string, f template.FuncMap, data interface{}) {
