@@ -73,18 +73,25 @@ func (in *InsertBuilder) Save(ctx context.Context) (int64,error) {
 		return 0, err
 	}
 	{{if .PrimaryKey}}
- 	{{if .PrimaryKey.IsAutoIncrment}}
-	if len(in.a)==1{
-		id, err := result.LastInsertId()
-		if err != nil {
-			return 0,err
-		}
-		if in.a[0].{{.PrimaryKey.GoColumnName}}==0 && id > 0 {
-				in.a[0].{{.PrimaryKey.GoColumnName}} = {{.PrimaryKey.GoColumnType}}(id)
+	{{if .PrimaryKey.IsAutoIncrment}}
+	lastInsertId, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return rowsAffected, err
+	}
+	if lastInsertId > 0 && rowsAffected > 0 {
+		for _, v := range in.a {
+			if v.{{.PrimaryKey.GoColumnName}} > 0 {
+				continue
+			}
+			v.{{.PrimaryKey.GoColumnName}} = {{.PrimaryKey.GoColumnType}}(lastInsertId)
+			lastInsertId++
 		}
 	}
-	
-    {{end}}
+	{{end}}
 	{{end}}
 
 	return result.RowsAffected()
@@ -137,7 +144,6 @@ func (d *DeleteBuilder) Exec(ctx context.Context) (int64, error) {
 type SelectBuilder struct {
 	builder *xsql.Selector
 	eq xsql.ExecQuerier
-	selectAll bool
 	timeout time.Duration
 }
 
@@ -282,14 +288,40 @@ func (s *SelectBuilder) Strings(ctx context.Context) ([]string, error) {
 	return xsql.Strings(ctx,s.builder,s.eq)
 }
 
+func scanDst(a *{{$tableName}}, columns []string) []interface{} {
+	dst := make([]interface{}, 0, len(columns))
+	for _, v := range columns {
+		switch v {
+		{{- range .Fields}}
+   		case {{.GoColumnName}}:
+			dst = append(dst, &a.{{.GoColumnName}})
+    	{{- end }}
+		}
+	}
+	return dst
+}
+
+func selectCheck(columns []string) error {
+	for _, v := range columns {
+		if _, ok := columnsSet[v]; !ok {
+			return errors.New("{{$tableName}} not have field:" + v)
+		}
+	}
+	return nil
+}
+
+
 // All  return all results
 func (s *SelectBuilder)All(ctx context.Context) ([]*{{$tableName}}, error) {
-	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
-	defer cancel()
 	if s.builder.SelectColumnsLen() <= 0 {
 		s.builder.Select(columns...)
-		s.selectAll = true
 	}
+	selectedColumns := s.builder.SelectedColumns()
+	if err := selectCheck(selectedColumns); err != nil {
+		return nil, err
+	}
+	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
+	defer cancel()
 	sqlstr, args := s.builder.Query()
 	q, err := s.eq.QueryContext(ctx, sqlstr, args...)
 	if err != nil {
@@ -297,22 +329,16 @@ func (s *SelectBuilder)All(ctx context.Context) ([]*{{$tableName}}, error) {
 	}
 	defer q.Close()
 	result := []*{{$tableName}}{}
-	if s.selectAll {
-		for q.Next() {
-			a := &{{$tableName}}{}
-			if err := q.Scan({{sqltool .  "gofield"}}); err != nil {
-				return nil, err
-			}
-			result = append(result, a)
+	for q.Next() {
+		a := &{{$tableName}}{}
+		dst := scanDst(a, selectedColumns)
+		if err := q.Scan(dst...); err != nil {
+			return nil, err
 		}
-		if q.Err() != nil {
-			return nil, q.Err()
-		}
-		return result, nil
+		result = append(result, a)
 	}
-
-	if err := xsql.ScanSlice(q, &result); err != nil {
-		return nil, err
+	if q.Err() != nil {
+		return nil, q.Err()
 	}
 	return result, nil
 }

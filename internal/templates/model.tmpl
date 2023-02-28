@@ -32,6 +32,13 @@ var columns = []string{
     {{- end }}
 }
 
+// columnsSet holds all SQL columns.
+var columnsSet = map[string]struct{}{
+	{{- range .Fields}}
+    {{ .GoColumnName}}:{},
+    {{- end }}
+}
+
 // Columns returns table all columns field name slice
 func Columns() []string{
     return columns

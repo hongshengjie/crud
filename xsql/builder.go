@@ -160,7 +160,6 @@ type UpdateBuilder struct {
 // Update creates a builder for the `UPDATE` statement.
 //
 //	Update("users").Set("name", "foo").Set("age", 10)
-//
 func Update(table string) *UpdateBuilder { return &UpdateBuilder{table: table} }
 
 // Schema sets the database name for the updated table.
@@ -282,7 +281,6 @@ type DeleteBuilder struct {
 //				),
 //			),
 //		)
-//
 func Delete(table string) *DeleteBuilder { return &DeleteBuilder{table: table} }
 
 // Schema sets the database name for the table whose row will be deleted.
@@ -339,7 +337,6 @@ type Predicate struct {
 // P creates a new predicate.
 //
 //	P().EQ("name", "a8m").And().EQ("age", 30)
-//
 func P(fns ...func(*Builder)) *Predicate {
 	return &Predicate{fns: fns}
 }
@@ -347,7 +344,6 @@ func P(fns ...func(*Builder)) *Predicate {
 // ExprP creates a new predicate from the given expression.
 //
 //	ExprP("A = ? AND B > ?", args...)
-//
 func ExprP(exr string, args ...interface{}) *Predicate {
 	return P(func(b *Builder) {
 		b.Join(Expr(exr, args...))
@@ -357,7 +353,6 @@ func ExprP(exr string, args ...interface{}) *Predicate {
 // Or combines all given predicates with OR between them.
 //
 //	Or(EQ("name", "foo"), EQ("name", "bar"))
-//
 func Or(preds ...*Predicate) *Predicate {
 	p := P()
 	return p.Append(func(b *Builder) {
@@ -368,7 +363,6 @@ func Or(preds ...*Predicate) *Predicate {
 // False appends the FALSE keyword to the predicate.
 //
 //	Delete().From("users").Where(False())
-//
 func False() *Predicate {
 	return P().False()
 }
@@ -383,7 +377,6 @@ func (p *Predicate) False() *Predicate {
 // Not wraps the given predicate with the not predicate.
 //
 //	Not(Or(EQ("name", "foo"), EQ("name", "bar")))
-//
 func Not(pred *Predicate) *Predicate {
 	return P().Not().Append(func(b *Builder) {
 		b.Nested(func(b *Builder) {
@@ -737,7 +730,6 @@ type Func struct {
 // Lower wraps the given column with the LOWER function.
 //
 //	P().EQ(sql.Lower("name"), "a8m")
-//
 func Lower(ident string) string {
 	f := &Func{}
 	f.Lower(ident)
@@ -868,7 +860,6 @@ type SelectTable struct {
 //
 //	t1 := Table("users").As("u")
 //	return Select(t1.C("name"))
-//
 func Table(name string) *SelectTable {
 	return &SelectTable{quote: true, name: name}
 }
@@ -999,7 +990,6 @@ func (s *Selector) Context() context.Context {
 //			From(t1).
 //			Join(t2).
 //			On(t1.C("id"), t2.C("user_id"))
-//
 func Select(columns ...string) *Selector {
 	return (&Selector{}).Select(columns...)
 }
@@ -1154,6 +1144,12 @@ func (s *Selector) Columns(columns ...string) []string {
 		names = append(names, s.C(c))
 	}
 	return names
+}
+
+func (s *Selector) SelectedColumns() []string {
+	columns := make([]string, 0, len(s.columns))
+	columns = append(columns, s.columns...)
+	return columns
 }
 
 // SelectColumnsLen returns len of select columns
