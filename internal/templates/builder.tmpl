@@ -313,12 +313,15 @@ func selectCheck(columns []string) error {
 
 // All  return all results
 func (s *SelectBuilder)All(ctx context.Context) ([]*{{$tableName}}, error) {
+	var selectedColumns []string
 	if s.builder.SelectColumnsLen() <= 0 {
 		s.builder.Select(columns...)
-	}
-	selectedColumns := s.builder.SelectedColumns()
-	if err := selectCheck(selectedColumns); err != nil {
-		return nil, err
+		selectedColumns = columns
+	}else{
+		selectedColumns = s.builder.SelectedColumns()
+		if err := selectCheck(selectedColumns); err != nil {
+			return nil, err
+		}
 	}
 	_,ctx, cancel:=xsql.Shrink(ctx,s.timeout)
 	defer cancel()
