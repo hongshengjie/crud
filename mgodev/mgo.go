@@ -53,10 +53,6 @@ func AgeLT(v interface{}) primitive.E {
 				Key:   "$lt",
 				Value: v,
 			},
-			{
-				Key:   "$gt",
-				Value: 1,
-			},
 		},
 	}
 }

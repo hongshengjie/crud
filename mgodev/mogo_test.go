@@ -24,8 +24,9 @@ func TestMgo(t *testing.T) {
 	}()
 	coll := client.Database("example").Collection("user")
 	//DeleteUser(coll)
-	UpdateUser(coll)
+	//UpdateUser(coll)
 	//FindUser(coll)
+	Insert(coll)
 }
 
 func FindUser(coll *mongo.Collection) {
