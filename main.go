@@ -16,6 +16,7 @@ import (
 	_ "embed"
 
 	_ "github.com/go-sql-driver/mysql"
+	mgopkg "github.com/hongshengjie/crud/internal/mgo"
 	"github.com/hongshengjie/crud/internal/model"
 )
 
@@ -40,12 +41,16 @@ var clientTmpl []byte
 //go:embed "internal/templates/react-grommet.tmpl"
 var reactGrommetTmpl []byte
 
+//go:embed "internal/templates/builder_mgo.tmpl"
+var crudMgo []byte
+
 var database string
 var path string
 var service bool
 var http bool
 var protopkg string
 var reactgrommet bool
+var mgo string
 
 // var fields string
 const defaultDir = "crud"
@@ -56,7 +61,7 @@ func init() {
 	flag.BoolVar(&http, "http", false, "-http  generate Gin controller")
 	flag.BoolVar(&reactgrommet, "reactgrommet", false, "-reactgrommet  generate reactgrommet tsx code work with -service")
 	flag.StringVar(&protopkg, "protopkg", "", "-protopkg  proto package field value")
-
+	flag.StringVar(&mgo, "mgo", "", "-mgo find struct from file and generate crud method example  ./user.go:User  User struct in ./user.go file ")
 }
 
 func main() {
@@ -98,6 +103,17 @@ func main() {
 	}
 	if isDir && path == defaultDir {
 		generateFile(filepath.Join(defaultDir, "aa_client.go"), string(clientTmpl), f, tableObjs)
+	}
+	if mgo != "" {
+		pathName := strings.Split(mgo, ":")
+		if len(pathName) != 2 {
+			log.Fatalf("-mgo not right example ./user.go:User")
+		}
+		filePath := pathName[0]
+		structName := pathName[1]
+		doc := mgopkg.ParseMongoStruct(filePath, structName)
+		generateFile(filePath, string(crudMgo), nil, doc)
+
 	}
 
 }
