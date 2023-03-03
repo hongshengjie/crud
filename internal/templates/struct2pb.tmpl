@@ -1,0 +1,5 @@
+message {{.PbName}} {
+{{- range $index,$field:=.Fields}}
+	{{$field.PbType}} {{$field.PbName}} = {{Incr $index}} ;
+{{- end }}
+}

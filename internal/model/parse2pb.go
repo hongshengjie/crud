@@ -1,4 +1,4 @@
-package mgo
+package model
 
 import (
 	"fmt"
@@ -10,23 +10,20 @@ import (
 	"strings"
 )
 
-type Document struct {
-	Package       string
-	Name          string
-	GoName        string
-	ImportTime    bool
-	Fields        []*Field
-	ObjectIDField *Field
+type PbMessage struct {
+	PbName string
+	GoName string
+	Fields []*PbField
 }
 
-type Field struct {
-	Name   string
+type PbField struct {
+	PbName string
+	PbType string
 	GoName string
 	GoType string
-	Tag    string
 }
 
-func ParseMongoStruct(filePath, structName string) *Document {
+func ParseStruct(filePath, structName string) *PbMessage {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, filePath, nil, parser.AllErrors)
 	if err != nil {
@@ -37,10 +34,9 @@ func ParseMongoStruct(filePath, structName string) *Document {
 		log.Fatalf("not find struct : %s on %s go source file", structName, filePath)
 	}
 
-	d := &Document{
-		Package: f.Name.String(),
-		Name:    strings.ToLower(structName),
-		GoName:  structName,
+	d := &PbMessage{
+		PbName: structName,
+		GoName: structName,
 	}
 	st, ok := ts.Type.(*ast.StructType)
 	if !ok {
@@ -48,36 +44,19 @@ func ParseMongoStruct(filePath, structName string) *Document {
 	}
 
 	for _, field := range st.Fields.List {
-		f := &Field{
+		gotype := GetGoType(field.Type)
+		f := &PbField{
+			PbName: strings.ToLower(field.Names[0].Name),
+			PbType: GoTypeToProtoType(gotype),
 			GoName: field.Names[0].Name,
+			GoType: gotype,
 		}
-		f.GoType = GetGoType(field.Type)
-		if f.GoType == "time.Time" {
-			d.ImportTime = true
-		}
-		if field.Tag != nil {
-			f.Tag = field.Tag.Value
-
-			v1, ok := reflect.StructTag(strings.Trim(field.Tag.Value, "`")).Lookup("bson")
-			if ok {
-				if v1 == "_id,omitempty" {
-					f.Name = "_id"
-					d.ObjectIDField = f
-				} else {
-					f.Name = strings.Split(v1, ",")[0]
-				}
-			}
-
-		} else {
-			f.Name = strings.ToLower(f.GoName)
+		if f.PbType == "" {
+			f.PbType = "string"
 		}
 		d.Fields = append(d.Fields, f)
 
 	}
-	if d.ObjectIDField == nil {
-		log.Fatalf("struct must have ID field with bson tag  `bson:\"_id,omitempty\"` ")
-	}
-
 	return d
 
 }

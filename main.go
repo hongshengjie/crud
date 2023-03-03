@@ -16,7 +16,7 @@ import (
 	_ "embed"
 
 	_ "github.com/go-sql-driver/mysql"
-	mgopkg "github.com/hongshengjie/crud/internal/mgo"
+
 	"github.com/hongshengjie/crud/internal/model"
 )
 
@@ -44,6 +44,9 @@ var reactGrommetTmpl []byte
 //go:embed "internal/templates/builder_mgo.tmpl"
 var crudMgo []byte
 
+//go:embed "internal/templates/struct2pb.tmpl"
+var struct2PB []byte
+
 var database string
 var path string
 var service bool
@@ -51,6 +54,7 @@ var http bool
 var protopkg string
 var reactgrommet bool
 var mgo string
+var struct2pb string
 
 // var fields string
 const defaultDir = "crud"
@@ -62,6 +66,7 @@ func init() {
 	flag.BoolVar(&reactgrommet, "reactgrommet", false, "-reactgrommet  generate reactgrommet tsx code work with -service")
 	flag.StringVar(&protopkg, "protopkg", "", "-protopkg  proto package field value")
 	flag.StringVar(&mgo, "mgo", "", "-mgo find struct from file and generate crud method example  ./user.go:User  User struct in ./user.go file ")
+	flag.StringVar(&struct2pb, "struct2pb", "", "-struct2pb find struct from file and generate corresponding proto message  ./user.go:User  User struct in ./user.go file ")
 }
 
 func main() {
@@ -93,9 +98,7 @@ func main() {
 			path = defaultDir
 		}
 	}
-	if path == "" {
-		path = defaultDir
-	}
+
 	if mgo != "" {
 		pathName := strings.Split(mgo, ":")
 		if len(pathName) != 2 {
@@ -103,9 +106,31 @@ func main() {
 		}
 		filePath := pathName[0]
 		structName := pathName[1]
-		doc := mgopkg.ParseMongoStruct(filePath, structName)
+		doc := model.ParseMongoStruct(filePath, structName)
 		generateFile(filePath, string(crudMgo), nil, doc)
 		return
+	}
+	if struct2pb != "" {
+		pathName := strings.Split(struct2pb, ":")
+		if len(pathName) != 2 {
+			log.Fatalf("-struct2pb not right example ./user.go:User")
+		}
+		filePath := pathName[0]
+		structName := pathName[1]
+		message := model.ParseStruct(filePath, structName)
+		tpl, err := template.New("").Funcs(f).Parse(string(struct2PB))
+		if err != nil {
+			log.Fatalln(err)
+		}
+		err = tpl.Execute(os.Stdout, message)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		return
+	}
+	if path == "" {
+		path = defaultDir
 	}
 	tableObjs, isDir := tableFromSql(path)
 	for _, v := range tableObjs {
