@@ -96,14 +96,6 @@ func main() {
 	if path == "" {
 		path = defaultDir
 	}
-
-	tableObjs, isDir := tableFromSql(path)
-	for _, v := range tableObjs {
-		generateFiles(v)
-	}
-	if isDir && path == defaultDir {
-		generateFile(filepath.Join(defaultDir, "aa_client.go"), string(clientTmpl), f, tableObjs)
-	}
 	if mgo != "" {
 		pathName := strings.Split(mgo, ":")
 		if len(pathName) != 2 {
@@ -113,7 +105,14 @@ func main() {
 		structName := pathName[1]
 		doc := mgopkg.ParseMongoStruct(filePath, structName)
 		generateFile(filePath, string(crudMgo), nil, doc)
-
+		return
+	}
+	tableObjs, isDir := tableFromSql(path)
+	for _, v := range tableObjs {
+		generateFiles(v)
+	}
+	if isDir && path == defaultDir {
+		generateFile(filepath.Join(defaultDir, "aa_client.go"), string(clientTmpl), f, tableObjs)
 	}
 
 }

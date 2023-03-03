@@ -76,8 +76,10 @@ type Predicate struct {
 func (p *Predicate) EQ(field string, value interface{}) *Predicate {
 	p.fns = append(p.fns, func(b *Builder) {
 		b.filter = append(b.filter, bson.E{
-			Key:   field,
-			Value: value,
+			Key: field,
+			Value: bson.D{
+				{Key: ops[OpEQ], Value: value},
+			},
 		})
 	})
 	return p
@@ -127,12 +129,12 @@ func (p *Predicate) LTE(field string, value interface{}) *Predicate {
 	return p
 }
 
-func (p *Predicate) In(field string, value interface{}) *Predicate {
+func (p *Predicate) In(field string, value ...interface{}) *Predicate {
 	p.fns = append(p.fns, func(b *Builder) {
 		b.filter = append(b.filter, bson.E{
 			Key: field,
 			Value: bson.D{
-				{Key: ops[OpIn], Value: value},
+				{Key: ops[OpIn], Value: bson.A(value)},
 			},
 		})
 	})
@@ -151,12 +153,12 @@ func (p *Predicate) NEQ(field string, value interface{}) *Predicate {
 	return p
 }
 
-func (p *Predicate) NotIn(field string, value interface{}) *Predicate {
+func (p *Predicate) NotIn(field string, value ...interface{}) *Predicate {
 	p.fns = append(p.fns, func(b *Builder) {
 		b.filter = append(b.filter, bson.E{
 			Key: field,
 			Value: bson.D{
-				{Key: ops[OpNotIn], Value: value},
+				{Key: ops[OpNotIn], Value: bson.A(value)},
 			},
 		})
 	})
@@ -195,15 +197,18 @@ func And(pp ...*Predicate) *Predicate {
 func logic(op Op, pp ...*Predicate) *Predicate {
 	p := P()
 	p.fns = append(p.fns, func(b *Builder) {
-		var conds bson.D
+		var conds bson.A
 		for _, v := range pp {
-			conds = append(conds, v.Query()...)
+			c := v.Query()
+			conds = append(conds, c)
+
 		}
-		item := bson.E{
+		item := bson.D{{
 			Key:   ops[op],
 			Value: conds,
+		},
 		}
-		b.filter = append(b.filter, item)
+		b.filter = append(b.filter, item...)
 	})
 	return p
 }
@@ -230,10 +235,10 @@ func GT(field string, value interface{}) *Predicate {
 func GTE(field string, value interface{}) *Predicate {
 	return P().GTE(field, value)
 }
-func In(field string, value interface{}) *Predicate {
-	return P().In(field, value)
+func In(field string, value ...interface{}) *Predicate {
+	return P().In(field, value...)
 }
 
-func NotIn(field string, value interface{}) *Predicate {
-	return P().NotIn(field, value)
+func NotIn(field string, value ...interface{}) *Predicate {
+	return P().NotIn(field, value...)
 }
